@@ -1,1 +1,1 @@
-# coratcoretl.ayar-
+coratcoretlayar.vercel.app
