@@ -1,315 +1,678 @@
-/* Corat Coret Layar — Premium Glassmorphism */
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-:root{
-  --bg:#0D0D0D;
-  --violet:#7C3AED;
-  --violet2:#8B5CF6;
-  --text:#ffffff;
-  --muted:rgba(255,255,255,.72);
-  --muted2:rgba(255,255,255,.55);
-  --glass:rgba(255,255,255,.06);
-  --glass2:rgba(255,255,255,.10);
-  --stroke:rgba(255,255,255,.14);
-  --shadow: 0 20px 60px rgba(0,0,0,.55);
-  --shadow2: 0 10px 30px rgba(0,0,0,.35);
-  --radius:22px;
-  --radius2:16px;
-  --max:1140px;
-  --container: min(var(--max), calc(100% - 40px));
-}
+  <title>Corat Coret Layar - Custom Design Premium</title>
+  <meta name="description" content="Corat Coret Layar melayani custom design premium untuk T-Shirt, Hoodie, Flag, Sticker, Banner, Tote Bag, Jersey, Poster, Mug, Topi, Keychain, Lanyard, dan lainnya. Harga terjangkau, pengerjaan cepat, full custom." />
+  <meta name="keywords" content="custom t-shirt, custom hoodie, custom sticker, custom flag, custom banner, merchandise custom, desain kaos, corat coret layar" />
+  <meta name="theme-color" content="#0D0D0D" />
 
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  font-family:"Poppins","Space Grotesk",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  background: radial-gradient(900px 500px at 15% 10%, rgba(124,58,237,.28), transparent 65%),
-              radial-gradient(700px 420px at 85% 0%, rgba(139,92,246,.22), transparent 60%),
-              linear-gradient(180deg, #0B0B0B 0%, #0D0D0D 40%, #0A0A0A 100%);
-  color:var(--text);
-  overflow-x:hidden;
-}
+  <!-- Open Graph -->
+  <meta property="og:title" content="Corat Coret Layar - Custom Design Premium" />
+  <meta property="og:description" content="Custom design merchandise premium: T-Shirt, Flag, Sticker, Hoodie, Tote Bag, Jersey, Banner, Poster, Mug, Topi, Keychain, Lanyard." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1520975958225-1f1f1f1f1f1f?auto=format&fit=crop&w=1200&q=80" />
 
-a{color:inherit;text-decoration:none}
-img{max-width:100%;display:block}
+  <!-- Favicon (inline SVG fallback) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%237C3AED'/%3E%3Cstop%20offset='1'%20stop-color='%230D0D0D'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='120'%20height='120'%20rx='24'%20fill='url(%23g)'/%3E%3Ctext%20x='60'%20y='68'%20text-anchor='middle'%20font-family='Poppins,%20sans-serif'%20font-size='34'%20fill='%23fff'%20font-weight='800'%3EC%3C/text%3E%3C/svg%3E" />
 
-.container{width:var(--container);margin:0 auto}
-.section{padding:72px 0;position:relative}
+  <!-- Fonts + Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Sora:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
-/* Background */
-.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;}
-.bg__grid{position:absolute;inset:-20%;background-image:
-  linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
-  linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
-  background-size:80px 80px;
-  transform: rotate(0.0001deg);
-  mask-image: radial-gradient(closest-side at 50% 30%, rgba(0,0,0,1), rgba(0,0,0,0));
-}
-.bg__blob{position:absolute;width:520px;height:520px;border-radius:999px;filter:blur(40px);opacity:.35}
-.bg__blob--a{left:-160px;top:40px;background: radial-gradient(circle at 30% 30%, rgba(124,58,237,.85), rgba(124,58,237,.0) 60%)}
-.bg__blob--b{right:-190px;top:-80px;background: radial-gradient(circle at 30% 30%, rgba(139,92,246,.85), rgba(139,92,246,.0) 60%)}
+  <link rel="stylesheet" href="./style.css" />
+</head>
 
-/* Cursor effects */
-.cursor{
-  width:10px;height:10px;border-radius:50%;position:fixed;top:0;left:0;z-index:9999;pointer-events:none;
-  background: rgba(124,58,237,.25);transform:translate(-50%,-50%);
-  filter: blur(0px);
-}
-.cursor--ring{
-  width:40px;height:40px;border-radius:50%;border:1px solid rgba(139,92,246,.35);position:fixed;top:0;left:0;z-index:9998;
-  transform:translate(-50%,-50%);
-  background: rgba(124,58,237,.06);
-}
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="bg__blob bg__blob--a"></div>
+    <div class="bg__blob bg__blob--b"></div>
+    <div class="bg__grid"></div>
+  </div>
 
-.skip-link{position:absolute;left:-9999px;top:-9999px}
-.skip-link:focus{left:20px;top:20px;z-index:10000;background:rgba(255,255,255,.1);padding:10px 14px;border-radius:12px;border:1px solid var(--stroke)}
+  <div class="cursor" aria-hidden="true"></div>
+  <div class="cursor cursor--ring" aria-hidden="true"></div>
 
-/* Glass */
-.glass{
-  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow: 0 0 0 rgba(0,0,0,0);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
+  <a class="skip-link" href="#home">Lewati ke konten</a>
 
-/* Loading */
-.loading{
-  position:fixed;inset:0;display:grid;place-items:center;z-index:20000;background: radial-gradient(900px 500px at 30% 10%, rgba(124,58,237,.25), transparent 60%),
-  rgba(0,0,0,.55);
-  transition:opacity .35s ease, visibility .35s ease;
-}
-.loading.is-hidden{opacity:0;visibility:hidden}
-.loading__card{width:min(420px, calc(100% - 30px));padding:24px 20px;border-radius:22px;text-align:center}
-.loading__logo{display:flex;justify-content:center;align-items:center;margin-bottom:10px}
-.loading__mark{font-weight:900;letter-spacing:.08em;padding:10px 16px;border-radius:16px;background:rgba(124,58,237,.16);border:1px solid rgba(139,92,246,.22)}
-.loading__bar{height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.06);margin-top:14px}
-.loading__bar span{display:block;height:100%;width:30%;background: linear-gradient(90deg, rgba(124,58,237,.2), rgba(139,92,246,.95), rgba(124,58,237,.2));
-  animation: loadingBar 1.1s ease-in-out infinite;}
-@keyframes loadingBar{0%{transform:translateX(-20%)}50%{transform:translateX(160%)}100%{transform:translateX(-20%)} }
-.loading__text{margin-top:12px;color:var(--muted);font-size:14px}
+  <!-- Loading overlay -->
+  <div id="loading" class="loading" role="status" aria-live="polite">
+    <div class="loading__card glass">
+      <div class="loading__logo">
+        <span class="loading__mark">CCL</span>
+      </div>
+      <div class="loading__bar" aria-hidden="true">
+        <span></span>
+      </div>
+      <p class="loading__text">Memuat pengalaman premium...</p>
+    </div>
+  </div>
 
-/* Header / Navbar */
-.header{position:fixed;top:0;left:0;right:0;z-index:1000;transition: background .25s ease, border-color .25s ease, transform .25s ease}
-.header.is-solid{background: rgba(13,13,13,.72);border-bottom:1px solid rgba(255,255,255,.12)}
+  <!-- Navbar -->
+  <header id="site-header" class="header">
+    <nav class="nav container" aria-label="Primary navigation">
+      <a class="brand" href="#home" aria-label="Corat Coret Layar">
+        <span class="brand__logo" aria-hidden="true"><i class="fa-solid fa-splotch"></i></span>
+        <span class="brand__name">Corat Coret Layar</span>
+      </a>
 
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-.nav.container{width:var(--container)}
-.brand{display:flex;align-items:center;gap:12px}
-.brand__logo{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:rgba(124,58,237,.16);border:1px solid rgba(139,92,246,.25)}
-.brand__name{font-weight:800;letter-spacing:.02em}
+      <div class="nav__links" role="navigation">
+        <a href="#home" class="nav__link" data-nav>Home</a>
+        <a href="#produk" class="nav__link" data-nav>Produk</a>
+        <a href="#cara-order" class="nav__link" data-nav>Cara Order</a>
+        <a href="#galeri" class="nav__link" data-nav>Galeri</a>
+        <a href="#testimoni" class="nav__link" data-nav>Testimoni</a>
+        <a href="#tentang" class="nav__link" data-nav>Tentang</a>
+        <a href="#faq" class="nav__link" data-nav>FAQ</a>
+        <a href="#kontak" class="nav__link nav__link--cta" data-nav>Kontak</a>
+      </div>
 
-.nav__links{display:flex;gap:18px;align-items:center}
-.nav__link{color:var(--muted2);font-size:14px;padding:10px 10px;border-radius:12px;position:relative;transition:color .2s ease, transform .2s ease, background .2s ease}
-.nav__link:hover{color:rgba(255,255,255,.92);background:rgba(255,255,255,.06);transform:translateY(-1px)}
-.nav__link.is-active{color:#fff}
-.nav__link.is-active::after{content:"";position:absolute;left:10px;right:10px;bottom:6px;height:2px;border-radius:999px;background:linear-gradient(90deg,var(--violet),var(--violet2))}
+      <button class="nav__toggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
 
-.nav__link--cta{color:#0D0D0D;background: linear-gradient(90deg, rgba(124,58,237,.95), rgba(139,92,246,.95));padding:10px 14px;border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 30px rgba(124,58,237,.18)}
-.nav__link--cta:hover{transform:translateY(-1px) scale(1.01)}
+    <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+      <div class="mobile-menu__inner glass">
+        <a href="#home" class="mobile-menu__link" data-mobile-nav>Home</a>
+        <a href="#produk" class="mobile-menu__link" data-mobile-nav>Produk</a>
+        <a href="#cara-order" class="mobile-menu__link" data-mobile-nav>Cara Order</a>
+        <a href="#galeri" class="mobile-menu__link" data-mobile-nav>Galeri</a>
+        <a href="#testimoni" class="mobile-menu__link" data-mobile-nav>Testimoni</a>
+        <a href="#tentang" class="mobile-menu__link" data-mobile-nav>Tentang</a>
+        <a href="#faq" class="mobile-menu__link" data-mobile-nav>FAQ</a>
+        <a href="#kontak" class="mobile-menu__link mobile-menu__link--cta" data-mobile-nav>Kontak</a>
+      </div>
+    </div>
+  </header>
 
-.nav__toggle{display:none;background:transparent;border:1px solid rgba(255,255,255,.16);width:44px;height:44px;border-radius:16px;align-items:center;justify-content:center;cursor:pointer}
-.nav__toggle span{display:block;width:18px;height:2px;background:rgba(255,255,255,.75);border-radius:2px}
-.nav__toggle span:nth-child(1){transform:translateY(-5px)}
-.nav__toggle span:nth-child(3){transform:translateY(5px)}
+  <main>
+    <!-- HERO -->
+    <section id="home" class="section hero">
+      <div class="container hero__wrap">
+        <div class="hero__left">
+          <div class="eyebrow reveal-left">
+            <span class="pill"><i class="fa-solid fa-wand-magic-sparkles"></i> Custom Design • Premium Finish</span>
+          </div>
 
-/* Mobile */
-.mobile-menu{display:none}
-.mobile-menu.is-open{display:block;}
-.mobile-menu__inner{padding:14px;margin:10px 0;border-radius:18px}
-.mobile-menu__link{display:block;padding:12px 12px;color:var(--muted);border-radius:14px}
-.mobile-menu__link:hover{background:rgba(255,255,255,.06);color:#fff}
-.mobile-menu__link--cta{background: linear-gradient(90deg, rgba(124,58,237,.9), rgba(139,92,246,.9));color:#0D0D0D;font-weight:700}
+          <h1 class="hero__title reveal-up">
+            <span class="hero__title-quote">&ldquo;Custom Design Sesuka Kamu.&rdquo;</span>
+          </h1>
 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:10px;border-radius:16px;padding:12px 16px;font-weight:700;font-size:14px;cursor:pointer;transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease;position:relative;overflow:hidden}
-.btn--small{padding:10px 13px;border-radius:14px;font-size:13px}
-.btn--primary{background: linear-gradient(90deg, rgba(124,58,237,.95), rgba(139,92,246,.95));border:1px solid rgba(255,255,255,.18);box-shadow:0 16px 40px rgba(124,58,237,.18);color:#0D0D0D}
-.btn--ghost{background: rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#fff}
-.btn--ghost:hover{background: rgba(255,255,255,.10);transform:translateY(-1px)}
-.btn--primary:hover{transform:translateY(-1px) scale(1.01);box-shadow:0 22px 70px rgba(124,58,237,.24)}
+          <p class="hero__subtitle reveal-up" style="animation-delay:.06s">
+            Bikin T-Shirt, Flag, Sticker, Banner, Hoodie, Tote Bag, dan berbagai merchandise dengan desain unik sesuai keinginan.
+          </p>
 
-.ripple::after{content:"";position:absolute;inset:auto;top:50%;left:50%;width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.6);transform:translate(-50%,-50%) scale(0);opacity:0;transition:transform .5s ease, opacity .5s ease}
-.ripple.is-rippling::after{opacity:.18;transform:translate(-50%,-50%) scale(20)}
+          <div class="hero__actions reveal-up" style="animation-delay:.12s">
+            <a href="#produk" class="btn btn--primary ripple" data-ripple>
+              <i class="fa-solid fa-bag-shopping"></i>
+              Lihat Produk
+            </a>
+            <a href="#kontak" class="btn btn--ghost ripple" data-ripple>
+              <i class="fa-solid fa-bolt"></i>
+              Order Sekarang
+            </a>
+          </div>
+            <div class="stat glass">
+              <div class="stat__icon"><i class="fa-solid fa-truck-fast"></i></div>
+              <div class="stat__body">
+                <div class="stat__num" data-counter="2">0</div>
+                <div class="stat__label">Hari produksi (estimasi)</div>
+              </div>
+            </div>
+          </div>
 
-/* Hero */
-.hero{padding-top:104px;min-height: calc(100vh - 20px);display:flex;align-items:flex-start}
-.hero__wrap{display:grid;grid-template-columns: 1.15fr .85fr;gap:26px;align-items:center}
-.hero__eyebrow{display:flex}
-.pill{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:var(--muted);font-size:13px}
+          <div class="typing glass" aria-label="Typing effect">
+            <span class="typing__label">Kita siap:</span>
+            <span class="typing__text" data-typing="T-Shirt, Flag, Sticker, Hoodie, Tote Bag"></span>
+          </div>
+        </div>
 
-.hero__title{margin:14px 0 10px;line-height:1.02;font-size:clamp(34px, 4.2vw, 56px);font-weight:900;letter-spacing:-.02em}
-.hero__title-quote{background: linear-gradient(90deg, #fff, rgba(139,92,246,.95));-webkit-background-clip:text;background-clip:text;color:transparent}
+        <div class="hero__right">
+          <div class="mock glass reveal-right" style="animation-delay:.08s">
+            <div class="mock__glow"></div>
+            <div class="mock__frame">
+              <img
+                class="mock__img"
+                loading="lazy"
+                decoding="async"
+                src="image.png"
+                alt="LOGO CORAT CORET LAYAR"
+              />
+              <div class="mock__overlay">
+                <div class="mock__tag"><i class="fa-solid fa-palette"></i> Corat Coret Layar</div>
+                <div class="mock__badge">
+                  <div class="badge__title">Premium Custom</div>
+                  <div class="badge__sub">Print • Sublim • DTG</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-.hero__subtitle{color:var(--muted);font-size:16px;line-height:1.6;max-width:520px}
-.hero__actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+          <div class="hero__cards">
+            <div class="mini-card glass reveal-up" style="animation-delay:.16s">
+              <div class="mini-card__icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="mini-card__title">Aman untuk Brand Kamu</div>
+              <div class="mini-card__text">Proses rapi, warna stabil, detail tajam.</div>
+            </div>
+            <div class="mini-card glass reveal-up" style="animation-delay:.22s">
+              <div class="mini-card__icon"><i class="fa-solid fa-bolt"></i></div>
+              <div class="mini-card__title">Revisi Fleksibel</div>
+              <div class="mini-card__text">Konsultasi dulu biar hasil sesuai ekspektasi.</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-.hero__stats{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-.stat{padding:14px 14px;border-radius:18px;display:flex;gap:12px;align-items:center}
-.stat__icon{width:40px;height:40px;border-radius:16px;background:rgba(124,58,237,.14);border:1px solid rgba(139,92,246,.2);display:grid;place-items:center}
-.stat__num{font-weight:900;font-size:20px}
-.stat__label{color:var(--muted2);font-size:12px;margin-top:2px}
+      <div class="hero__parallax" aria-hidden="true"></div>
+    </section>
 
-.typing{margin-top:18px;padding:14px 16px;border-radius:18px;display:flex;gap:10px;align-items:center}
-.typing__label{color:var(--muted2);font-size:13px}
-.typing__text{font-weight:800}
+    <!-- TENTANG -->
+    <section id="tentang" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-layer-group"></i> Tentang Kami</p>
+        <h2 class="section-head__title">Custom Design berkualitas. Hasil premium, harga tetap ramah.</h2>
+        <p class="section-head__desc">
+          Corat Coret Layar melayani jasa custom design merchandise dengan standar kualitas tinggi: detail bersih, finishing rapi, dan desain yang benar-benar sesuai.
+          Kamu tinggal kirim ide—kami bantu bentuk jadi karya yang siap dipakai.
+        </p>
+      </div>
 
-.hero__right{position:relative}
-.mock{border-radius:26px;overflow:hidden}
-.mock__frame{position:relative}
-.mock__img{width:100%;height: 390px;object-fit:cover;transform:scale(1.02);filter:saturate(1.05) contrast(1.02)}
-.mock__glow{position:absolute;inset:-40%;background:radial-gradient(circle at 30% 20%, rgba(124,58,237,.42), transparent 50%);filter: blur(24px);opacity:.9}
-.mock__overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px}
-.mock__tag{align-self:flex-start;display:inline-flex;gap:10px;align-items:center;padding:10px 12px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:13px}
-.mock__badge{align-self:flex-end;max-width:210px;padding:14px 14px;border-radius:18px;background:rgba(13,13,13,.4);border:1px solid rgba(255,255,255,.15)}
-.badge__title{font-weight:900}
-.badge__sub{color:var(--muted2);font-size:12px;margin-top:4px}
+      <div class="container grid-2">
+        <div class="glass info-card reveal-left">
+          <h3 class="info-card__title">Full Custom, Dari Nol</h3>
+          <p class="info-card__text">Dari konsep, sketsa, warna, sampai siap produksi. Kamu bisa request style sesuka hati.</p>
+          <ul class="checklist">
+            <li><i class="fa-solid fa-check"></i> Premium quality</li>
+            <li><i class="fa-solid fa-check"></i> Warna konsisten</li>
+            <li><i class="fa-solid fa-check"></i> Detail tajam</li>
+          </ul>
+        </div>
 
-.hero__cards{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
-.mini-card{padding:16px;border-radius:20px;display:flex;gap:12px;align-items:flex-start}
-.mini-card__icon{width:42px;height:42px;border-radius:18px;background:rgba(124,58,237,.16);border:1px solid rgba(139,92,246,.22);display:grid;place-items:center;font-size:18px}
-.mini-card__title{font-weight:900}
-.mini-card__text{color:var(--muted2);font-size:13px;margin-top:4px;line-height:1.5}
+        <div class="glass info-card reveal-right">
+          <h3 class="info-card__title">Harga Terjangkau, Pengerjaan Cepat</h3>
+          <p class="info-card__text">Kombinasi kualitas & efisiensi supaya kamu bisa tampil keren tanpa menguras budget.</p>
+          <div class="info-card__metrics">
+            <div class="metric">
+              <div class="metric__icon"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <div class="metric__value">Cepat</div>
+                <div class="metric__label">Estimasi produksi</div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric__icon"><i class="fa-solid fa-handshake"></i></div>
+              <div>
+                <div class="metric__value">Support Ramah</div>
+                <div class="metric__label">Konsultasi desain</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-.hero__parallax{position:absolute;left:0;right:0;bottom:-80px;height:240px;background:radial-gradient(closest-side at 50% 0%, rgba(124,58,237,.22), transparent 65%);filter:blur(0px);opacity:.7;pointer-events:none}
+    <!-- PRODUK -->
+    <section id="produk" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-bag-shopping"></i> Produk</p>
+        <h2 class="section-head__title">Pilih merchandise kamu. Kami kerjakan custom premium.</h2>
+        <p class="section-head__desc">Contoh visual di bawah bisa kamu jadikan referensi. Ganti tema & warna sesuai brand kamu.</p>
+      </div>
 
-/* Reveal animations */
-.reveal-up,.reveal-left,.reveal-right{opacity:0;transform:translateY(16px)}
-.reveal-left{transform:translateX(-18px)}
-.reveal-right{transform:translateX(18px)}
-.reveal-show{opacity:1;transform:translateY(0);transition: all .65s cubic-bezier(.2,.85,.2,1)}
-.reveal-show.reveal-left{transform:translateX(0)}
-.reveal-show.reveal-right{transform:translateX(0)}
+      <div class="container grid-products">
+        <article class="product-card glass reveal-up">
+          <img loading="lazy" decoding="async" src="t-shirt.png" alt="Custom T-Shirt" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-shirt"></i></div>
+            <h3 class="product-card__title">Custom T-Shirt</h3>
+            <p class="product-card__desc">Kaos custom dengan warna tajam dan finishing premium.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Section heads */
-.section-head{margin-bottom:26px}
-.section-head__kicker{color:rgba(255,255,255,.85);display:inline-flex;gap:10px;align-items:center;font-weight:800}
-.section-head__title{margin:10px 0 10px;font-size:clamp(22px,2.3vw,34px);letter-spacing:-.02em;line-height:1.2}
-.section-head__desc{color:var(--muted);line-height:1.7;max-width:760px}
+        <article class="product-card glass reveal-up" style="animation-delay:.05s">
+          <img loading="lazy" decoding="async" src="flag.png" alt="Custom Flag" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-flag"></i></div>
+            <h3 class="product-card__title">Custom Flag</h3>
+            <p class="product-card__desc">Flag untuk event, komunitas, atau brand—siap tampil.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Tentang */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.info-card{padding:18px;border-radius:var(--radius)}
-.info-card__title{font-weight:900;font-size:18px}
-.info-card__text{color:var(--muted);margin-top:8px;line-height:1.7}
-.checklist{list-style:none;padding:0;margin-top:12px;display:grid;gap:10px}
-.checklist li{display:flex;gap:10px;align-items:center;color:rgba(255,255,255,.9)}
-.checklist i{color:rgba(139,92,246,.95)}
-.info-card__metrics{display:grid;gap:12px;margin-top:14px}
-.metric{display:flex;gap:12px;align-items:center;padding:14px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10)}
-.metric__icon{width:42px;height:42px;border-radius:18px;background:rgba(124,58,237,.14);border:1px solid rgba(139,92,246,.22);display:grid;place-items:center}
-.metric__value{font-weight:900}
-.metric__label{color:var(--muted2);font-size:12px;margin-top:2px}
+        <article class="product-card glass reveal-up" style="animation-delay:.10s">
+          <img loading="lazy" decoding="async" src="sticker.png" alt="Custom Sticker" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-sticker-mule"></i></div>
+            <h3 class="product-card__title">Custom Sticker</h3>
+            <p class="product-card__desc">Sticker desain unik: lucu, elegan, atau bold—bebas.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Products */
-.grid-products{display:grid;grid-template-columns:repeat(4, 1fr);gap:16px}
-.product-card{padding:0;border-radius:var(--radius);overflow:hidden;transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease}
-.product-card__img{height:190px;width:100%;object-fit:cover;filter:saturate(1.05) contrast(1.02)}
-.product-card__body{padding:16px}
-.product-card__icon{width:44px;height:44px;border-radius:18px;background:rgba(124,58,237,.16);border:1px solid rgba(139,92,246,.22);display:grid;place-items:center;margin-bottom:10px}
-.product-card__title{font-weight:900;margin:4px 0 6px}
-.product-card__desc{color:var(--muted2);line-height:1.6;font-size:13px;min-height:44px}
-.product-card__btn{margin-top:10px;justify-content:center;width:100%}
-.product-card:hover{transform:translateY(-6px);box-shadow: var(--shadow2);border-color:rgba(139,92,246,.35)}
-.product-card:hover .product-card__img{transform:scale(1.04);transition: transform .35s ease}
+        <article class="product-card glass reveal-up" style="animation-delay:.15s">
+          <img loading="lazy" decoding="async" src="hoodie.png" alt="Hoodie" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-hands-bubbles"></i></div>
+            <h3 class="product-card__title">Hoodie</h3>
+            <p class="product-card__desc">Hoodie premium dengan detail desain yang nendang.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Masonry grid */
-.masonry{columns:3;column-gap:16px}
-.masonry__item{break-inside:avoid;margin:0 0 16px;padding:12px;border-radius:20px;overflow:hidden;transition: transform .25s ease, filter .25s ease, border-color .25s ease}
-.masonry__item img{border-radius:16px;max-height:240px;object-fit:cover;transition: transform .35s ease, filter .35s ease}
-.masonry__item figcaption{margin-top:10px;color:var(--muted2);font-size:13px}
-.masonry__item:hover{transform:translateY(-6px);border-color:rgba(139,92,246,.35)}
-.masonry__item:hover img{transform:scale(1.08);filter: blur(.2px) saturate(1.1)}
+        <article class="product-card glass reveal-up" style="animation-delay:.20s">
+          <img loading="lazy" decoding="async" src="totebag.png" alt="Tote Bag" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <h3 class="product-card__title">Tote Bag</h3>
+            <p class="product-card__desc">Tas tote custom untuk kebutuhan sehari-hari.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Timeline */
-.timeline{position:relative;display:grid;gap:12px}
-.timeline::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg, rgba(124,58,237,.8), rgba(139,92,246,.2));transform:translateX(-50%);opacity:.65}
-.timeline__item{position:relative;width:calc(50% - 18px);padding:18px;border-radius:var(--radius);}
-.timeline__item:nth-child(odd){justify-self:end;}
-.timeline__item:nth-child(even){justify-self:start;}
-.timeline__dot{width:46px;height:46px;border-radius:18px;background:rgba(124,58,237,.16);border:1px solid rgba(139,92,246,.24);display:grid;place-items:center;margin-bottom:10px;font-size:18px}
-.timeline__content h3{margin:0 0 6px;font-size:16px}
-.timeline__content p{margin:0;color:var(--muted);line-height:1.7}
+        <article class="product-card glass reveal-up" style="animation-delay:.25s">
+          <img loading="lazy" decoding="async" src="jersey.png" alt="Jersey" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-futbol"></i></div>
+            <h3 class="product-card__title">Jersey</h3>
+            <p class="product-card__desc">Jersey tim/komunitas dengan desain full custom.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
 
-/* Why choose */
-.grid-check{display:grid;grid-template-columns:repeat(4, 1fr);gap:14px}
-.feature{padding:18px;border-radius:var(--radius);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
-.feature i{font-size:20px;color:rgba(139,92,246,.95)}
-.feature h3{margin:0;font-size:16px}
+        <article class="product-card glass reveal-up" style="animation-delay:.30s">
+          <img loading="lazy" decoding="async" src="poster.png" alt="Poster" class="product-card__img" />
+          <div class="product-card__body">
+            <div class="product-card__icon"><i class="fa-solid fa-file-image"></i></div>
+            <h3 class="product-card__title">Poster</h3>
+            <p class="product-card__desc">Poster desain event dengan kualitas detail yang solid.</p>
+            <a href="#kontak" class="product-card__btn btn btn--small btn--primary ripple" data-ripple>Pesan Sekarang</a>
+          </div>
+        </article>
+    </section>
 
-/* Testimonial */
-.testimonial__slider{padding:18px;border-radius:var(--radius);overflow:hidden}
-.testimonial__track{display:flex;gap:14px;transition:transform .55s cubic-bezier(.2,.85,.2,1)}
-.testimonial__card{min-width: calc(100% - 0px);padding:16px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background: rgba(255,255,255,.03)}
-.t__top{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-.t__avatar{width:48px;height:48px;border-radius:18px;border:1px solid rgba(255,255,255,.16)}
-.t__name{font-weight:900;margin:0}
-.t__meta{color:var(--muted2);font-size:13px;margin:2px 0 0}
-.t__quote{color:rgba(255,255,255,.92);line-height:1.7;margin:0 0 12px}
-.t__stars{color:rgba(139,92,246,.95);font-size:12px}
+    <!-- CARA ORDER -->
+    <section id="cara-order" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-route"></i> Cara Order</p>
+        <h2 class="section-head__title">Proses gampang, hasil tetap premium.</h2>
+        <p class="section-head__desc">Ikuti langkah ini—tim kami akan memandu sampai produksi.</p>
+      </div>
 
-.testimonial__controls{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:14px}
-.tbtn{width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:transform .2s ease, background .2s ease}
-.tbtn:hover{transform:translateY(-2px);background:rgba(255,255,255,.10)}
-.dots{display:flex;gap:8px}
-.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.14)}
-.dot.is-active{background:linear-gradient(90deg, rgba(124,58,237,.95), rgba(139,92,246,.95));border-color:rgba(255,255,255,.22)}
+      <div class="container timeline">
+        <div class="timeline__item glass reveal-left">
+          <div class="timeline__dot"><i class="fa-solid fa-comments"></i></div>
+          <div class="timeline__content">
+            <h3>1. Hubungi Admin</h3>
+            <p>Mulai dengan chat untuk konsultasi kebutuhan dan referensi desain.</p>
+          </div>
+        </div>
+        <div class="timeline__item glass reveal-up">
+          <div class="timeline__dot"><i class="fa-solid fa-pen-nib"></i></div>
+          <div class="timeline__content">
+            <h3>2. Kirim Design</h3>
+            <p>Kirim file/ide. Jika belum ada, kamu bisa share konsep secara garis besar.</p>
+          </div>
+        </div>
+        <div class="timeline__item glass reveal-up">
+          <div class="timeline__dot"><i class="fa-solid fa-arrows-rotate"></i></div>
+          <div class="timeline__content">
+            <h3>3. Revisi</h3>
+            <p>Revisi sesuai arahan agar hasil benar-benar pas.</p>
+          </div>
+        </div>
+        <div class="timeline__item glass reveal-right">
+          <div class="timeline__dot"><i class="fa-solid fa-industry"></i></div>
+          <div class="timeline__content">
+            <h3>4. Produksi</h3>
+            <p>Proses printing/craft dengan kontrol detail dan kualitas.</p>
+          </div>
+        </div>
+        <div class="timeline__item glass reveal-right">
+          <div class="timeline__dot"><i class="fa-solid fa-truck"></i></div>
+          <div class="timeline__content">
+            <h3>5. Pengiriman</h3>
+            <p>Barang dikirim dengan aman. Kamu tinggal tunggu sampai sampai.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-/* FAQ */
-.faq{padding:16px;border-radius:var(--radius)}
-.accordion{display:grid;gap:10px}
-.acc-trigger{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;cursor:pointer}
-.acc-trigger span{font-weight:800}
-.acc-trigger i{opacity:.8}
-.acc-panel{padding:0 14px 14px;color:var(--muted);line-height:1.7}
+    <!-- GALERI -->
+    <section id="galeri" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-images"></i> Galeri</p>
+        <h2 class="section-head__title">Banyak contoh desain Corat Coret Layar</h2>
+        <p class="section-head__desc">Hover untuk lihat efek premium: zoom, blur, dan animasi halus.</p>
+      </div>
 
-/* Footer */
-.footer{padding-top:26px}
-.footer__grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.1fr;gap:16px}
-.footer__col{padding:18px;border-radius:var(--radius)}
-.footer__brand{padding:18px;border-radius:var(--radius)}
-.brand--footer{gap:10px}
-.footer__text{color:var(--muted);line-height:1.7;margin-top:10px}
-.footer__social{display:flex;gap:10px;margin-top:14px}
-.soc{width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);display:grid;place-items:center;transition:transform .2s ease, background .2s ease}
-.soc:hover{transform:translateY(-3px);background:rgba(255,255,255,.10)}
-.footer__title{margin:0 0 10px;font-size:14px;color:rgba(255,255,255,.9)}
-.footer__link{display:block;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);margin-top:10px;color:var(--muted)}
-.footer__link:hover{color:#fff;background:rgba(255,255,255,.06)}
-.footer__bottom{margin-top:18px;padding:14px 0 0}
-.footer__bottom-inner{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted2);font-size:13px}
-.footer__small{opacity:.9}
+      <div class="container masonry" id="galleryGrid">
+        <figure class="masonry__item glass reveal-up">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975864010-101010101010?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 1" />
+          <figcaption>Corat Coret • Custom Print</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.04s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975969000-121212121212?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 2" />
+          <figcaption>Dark Gradient • Premium</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.08s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975707000-131313131313?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 3" />
+          <figcaption>Sticker Set • Urban Vibes</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.12s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975927000-141414141414?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 4" />
+          <figcaption>Banner Event • Bold Look</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.16s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975752000-151515151515?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 5" />
+          <figcaption>Hoodie • Purple Accent</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.20s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975902000-161616161616?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 6" />
+          <figcaption>Jersey • Team Identity</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.24s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975601000-171717171717?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 7" />
+          <figcaption>Tote Bag • Clean Minimal</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.28s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975658000-181818181818?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 8" />
+          <figcaption>Keychain • Small Details</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.32s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975716000-191919191919?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 9" />
+          <figcaption>Mug • Everyday Premium</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.36s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975853000-202020202020?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 10" />
+          <figcaption>Poster • Gallery Ready</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.40s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975971000-212121212121?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 11" />
+          <figcaption>Flag • Event Momentum</figcaption>
+        </figure>
+        <figure class="masonry__item glass reveal-up" style="animation-delay:.44s">
+          <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1520975888000-222222222222?auto=format&fit=crop&w=1200&q=80" alt="Galeri desain 12" />
+          <figcaption>Lanyard • Ready For Event</figcaption>
+        </figure>
+      </div>
+    </section>
 
-/* Floating buttons */
-.float{position:fixed;right:22px;bottom:22px;width:56px;height:56px;border-radius:20px;display:grid;place-items:center;z-index:1200;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);backdrop-filter: blur(14px);-webkit-backdrop-filter: blur(14px);box-shadow:0 18px 50px rgba(0,0,0,.35);transition: transform .2s ease, background .2s ease}
-.float:hover{transform: translateY(-6px) scale(1.03);background:rgba(255,255,255,.10)}
-.float__icon i{font-size:22px}
-.float--wa{background: linear-gradient(90deg, rgba(16,185,129,.95), rgba(34,197,94,.95));border-color:rgba(255,255,255,.18);color:#04130b;}
+    <!-- Kenapa Memilih Kami -->
+    <section class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-star"></i> Kenapa Memilih Kami</p>
+        <h2 class="section-head__title">Eksklusif di mata, solid di hasil.</h2>
+        <p class="section-head__desc">Kombinasi kualitas, proses rapi, dan dukungan customer yang membuat kamu nyaman.</p>
+      </div>
 
-.float--ig{right:22px;bottom:92px}
-.float--ig .float__icon i{color:#fff}
+      <div class="container grid-check">
+        <div class="feature glass reveal-left"><i class="fa-solid fa-crown"></i><h3>Premium Quality</h3></div>
+        <div class="feature glass reveal-up"><i class="fa-solid fa-wand-magic-sparkles"></i><h3>Full Custom</h3></div>
+        <div class="feature glass reveal-up"><i class="fa-solid fa-tag"></i><h3>Harga Terjangkau</h3></div>
+        <div class="feature glass reveal-right"><i class="fa-solid fa-bolt"></i><h3>Pengerjaan Cepat</h3></div>
+        <div class="feature glass reveal-left"><i class="fa-solid fa-lock"></i><h3>Aman</h3></div>
+        <div class="feature glass reveal-up"><i class="fa-solid fa-layer-group"></i><h3>Banyak Pilihan Produk</h3></div>
+        <div class="feature glass reveal-up"><i class="fa-solid fa-headset"></i><h3>Customer Support Ramah</h3></div>
+        <div class="feature glass reveal-right"><i class="fa-solid fa-sparkles"></i><h3>Finishing Rapi</h3></div>
+      </div>
+    </section>
 
-.float--ig::after{content: attr(data-tooltip);position:absolute;right:66px;bottom:12px;background:rgba(13,13,13,.75);border:1px solid rgba(255,255,255,.16);color:#fff;padding:10px 12px;border-radius:14px;white-space:nowrap;opacity:0;transform: translateY(4px);transition: opacity .18s ease, transform .18s ease;pointer-events:none}
-.float--ig:hover::after{opacity:1;transform: translateY(0)}
+    <!-- Testimoni -->
+    <section id="testimoni" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-comment-dots"></i> Testimoni</p>
+        <h2 class="section-head__title">Yang bikin percaya: pengalaman pelanggan</h2>
+        <p class="section-head__desc">Slider otomatis, minimal 6 testimoni dengan dummy data.</p>
+      </div>
 
-/* Responsive */
-@media (max-width: 980px){
-  .hero__wrap{grid-template-columns:1fr;gap:18px}
-  .mock__img{height:320px}
-  .grid-products{grid-template-columns:repeat(2, 1fr)}
-  .grid-check{grid-template-columns:repeat(2, 1fr)}
-  .footer__grid{grid-template-columns:1fr 1fr}
-  .timeline::before{left:28px}
-  .timeline__item{width:100%;justify-self:start!important;margin-left:54px}
-  .timeline__item:nth-child(odd),.timeline__item:nth-child(even){justify-self:start}
-}
-@media (max-width: 640px){
-  .nav__links{display:none}
-  .nav__toggle{display:flex}
-  .hero{padding-top:96px}
-  .grid-products{grid-template-columns:1fr}
-  .grid-check{grid-template-columns:1fr}
-  .masonry{columns:2}
-  .footer__grid{grid-template-columns:1fr}
-}
+      <div class="container testimonial">
+        <div class="testimonial__slider glass reveal-up">
+          <div class="testimonial__track" id="testimonialTrack">
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=12" alt="Avatar A" />
+                <div>
+                  <h3 class="t__name">Nadia A.</h3>
+                  <p class="t__meta">Custom Sticker</p>
+                </div>
+              </div>
+              <p class="t__quote">“Desainnya rapih banget. Warna ungu-nya keluar premium, dan responnya cepat.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=35" alt="Avatar B" />
+                <div>
+                  <h3 class="t__name">Rizky P.</h3>
+                  <p class="t__meta">Custom T-Shirt</p>
+                </div>
+              </div>
+              <p class="t__quote">“Keren. Bahannya nyaman, print-nya tajam, dan revisinya sesuai request komunitas kami.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=44" alt="Avatar C" />
+                <div>
+                  <h3 class="t__name">Salsa K.</h3>
+                  <p class="t__meta">Custom Hoodie</p>
+                </div>
+              </div>
+              <p class="t__quote">“Packaging rapi dan hasilnya mahal. Spot ungu di desainnya pas banget.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=8" alt="Avatar D" />
+                <div>
+                  <h3 class="t__name">Dimas R.</h3>
+                  <p class="t__meta">Custom Flag</p>
+                </div>
+              </div>
+              <p class="t__quote">“Flag-nya tebal dan warna tidak pudar. Adminnya informatif sampai barang berangkat.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=21" alt="Avatar E" />
+                <div>
+                  <h3 class="t__name">Putri W.</h3>
+                  <p class="t__meta">Custom Banner</p>
+                </div>
+              </div>
+              <p class="t__quote">“Banner promo event kami terlihat premium. Teksnya jelas, desainnya sesuai mockup.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+
+            <article class="testimonial__card" data-testimonial>
+              <div class="t__top">
+                <img loading="lazy" decoding="async" class="t__avatar" src="https://i.pravatar.cc/120?img=16" alt="Avatar F" />
+                <div>
+                  <h3 class="t__name">Andra H.</h3>
+                  <p class="t__meta">Custom Mug</p>
+                </div>
+              </div>
+              <p class="t__quote">“Hadiah anniversary jadi makin berkesan. Detail desainnya rapi dan warna tetap bagus.”</p>
+              <div class="t__stars" aria-label="Rating 5">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="testimonial__controls">
+          <button class="tbtn" id="tPrev" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="dots" id="tDots" aria-hidden="true"></div>
+          <button class="tbtn" id="tNext" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-circle-question"></i> FAQ</p>
+        <h2 class="section-head__title">Pertanyaan yang sering muncul</h2>
+        <p class="section-head__desc">Jawaban cepat biar kamu nggak bingung dari awal.</p>
+      </div>
+
+      <div class="container faq glass reveal-up">
+        <div class="accordion" id="faqAccordion">
+          <div class="acc-item">
+            <button class="acc-trigger" aria-expanded="false">
+              <span>Apa itu custom design?</span>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="acc-panel" hidden>
+              <p>Custom design berarti desain bisa dibuat sesuai kebutuhanmu: bentuk, warna, gaya, sampai layout.</p>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger" aria-expanded="false">
+              <span>Apakah bisa revisi?</span>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="acc-panel" hidden>
+              <p>Bisa. Kamu akan dibantu menyesuaikan desain sampai hasilnya sesuai ekspektasi.</p>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger" aria-expanded="false">
+              <span>Berapa estimasi produksi?</span>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="acc-panel" hidden>
+              <p>Estimasi bisa berbeda tergantung produk & antrian. Umumnya 2–5 hari kerja (akan diinformasikan saat konfirmasi).</p>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger" aria-expanded="false">
+              <span>Apakah melayani order kecil?</span>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="acc-panel" hidden>
+              <p>Ya. Order kecil tetap kami tangani selama detail dan desain jelas.</p>
+            </div>
+          </div>
+
+          <div class="acc-item">
+            <button class="acc-trigger" aria-expanded="false">
+              <span>Bagaimana cara kirim desain?</span>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="acc-panel" hidden>
+              <p>Kamu bisa kirim file gambar/brief lewat chat. Jika kamu belum punya desain, kamu bisa share ide dan referensi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KONTAK + FOOTER -->
+    <section id="kontak" class="section">
+      <div class="container section-head reveal-up">
+        <p class="section-head__kicker"><i class="fa-solid fa-phone"></i> Kontak</p>
+        <h2 class="section-head__title">Siap custom merchandise premium?</h2>
+        <p class="section-head__desc">Klik tombol WhatsApp floating untuk konsultasi, atau gunakan tombol Order Sekarang di atas.</p>
+      </div>
+
+      <footer class="footer">
+        <div class="container footer__grid">
+          <div class="footer__brand reveal-left">
+            <div class="brand brand--footer">
+              <span class="brand__logo" aria-hidden="true"><i class="fa-solid fa-splotch"></i></span>
+              <span class="brand__name">Corat Coret Layar</span>
+            </div>
+            <p class="footer__text">Custom design berkualitas dengan hasil premium dan harga terjangkau.</p>
+            <div class="footer__social">
+              <a class="soc" href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a class="soc" href="#" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+          </div>
+
+          <div class="footer__col glass reveal-up">
+            <h3 class="footer__title">Alamat</h3>
+            <p class="footer__text">JAWI PRIGEN JAWA TIMUR</p>
+          </div>
+
+          <div class="footer__col glass reveal-up">
+            <h3 class="footer__title">Jam Operasional</h3>
+            <p class="footer__text">Senin - Sabtu: 06.00 - 22.00</p>
+          </div>
+
+          <div class="footer__col glass reveal-right">
+            <h3 class="footer__title">Media Sosial</h3>
+            <a class="footer__link" href="#" aria-label="Instagram">@corat-coret.merch</a>
+            <a class="footer__link" href="#" aria-label="WhatsApp">Chat via WhatsApp</a>
+          </div>
+        </div>
+
+        <div class="footer__bottom">
+          <div class="container footer__bottom-inner">
+            <span>© <span id="year"></span> Corat Coret Layar. All rights reserved.</span>
+            <span class="footer__small">Dibuat dengan rasa premium ✦</span>
+          </div>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Floating buttons -->
+  <a
+    class="float float--wa"
+    href="https://wa.me/6281333385899?text=Halo%20Admin%20Corat%20Coret%20Layar%20%F0%9F%91%8B%0A%0ASaya%20tertarik%20dengan%20layanan%20custom%20merchandise.%0A%0ASaya%20ingin%20memesan%3A%0A%E2%98%90%20T-Shirt%0A%E2%98%90%20Flag%0A%E2%98%90%20Sticker%0A%E2%98%90%20Hoodie%0A%E2%98%90%20Tote%20Bag%0A%E2%98%90%20Jersey%0A%E2%98%90%20Banner%0A%E2%98%90%20Poster%0A%E2%98%90%20Mug%0A%E2%98%90%20Topi%0A%E2%98%90%20Lainnya%0A%0ASaya%20ingin%20berkonsultasi%20terlebih%20dahulu%20mengenai%20desain%20dan%20harga.%0A%0ATerima%20kasih."
+    target="_blank"
+    rel="noopener"
+    aria-label="Chat WhatsApp"
+  >
+    <span class="float__icon" aria-hidden="true">
+      <i class="fa-brands fa-whatsapp"></i>
+    </span>
+    <span class="float__text" aria-hidden="true">WA</span>
+  </a>
+
+  <a
+    class="float float--ig"
+    href="https://www.instagram.com/corat-coret.merch/"
+    target="_blank"
+    rel="noopener"
+    aria-label="Buka Instagram"
+    data-tooltip="Lihat hasil karya kami di Instagram."
+  >
+    <span class="float__icon" aria-hidden="true">
+      <i class="fa-brands fa-instagram"></i>
+    </span>
+    <span class="float__text" aria-hidden="true">IG</span>
+  </a>
+
+  <script src="./script.js"></script>
+  <footer style="text-align: center; padding: 20px;">
+    <span style="font-size: 0.8rem;">&copy; 2026 coratcoretlayar</span> <br>
+          <span style="font-size: 0.5rem;">by azril-ae</span>
+</body>
+</html>
 
