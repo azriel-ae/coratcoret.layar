@@ -217,12 +217,136 @@
       transition: all 0.3s ease;
       cursor: pointer;
       flex-shrink: 0;
+      margin-top: -4px;
     }
 
     .theme-toggle-btn:hover {
       background: var(--glass-bg-hover);
       border-color: var(--glass-border-bright);
       transform: rotate(20deg) scale(1.05);
+    }
+
+    .btn-admin-nav {
+      padding: 8px 14px !important;
+      font-size: 12px !important;
+      border-radius: var(--radius-md) !important;
+      gap: 6px !important;
+      margin-top: -2px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .admin-modal-card {
+      width: min(520px, 100%);
+      background: var(--drawer-bg);
+      border: 1px solid var(--glass-border-bright);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active .admin-modal-card {
+      transform: scale(1);
+    }
+
+    .admin-modal-lg {
+      width: min(800px, 100%);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-gold);
+    }
+
+    .admin-tab-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .admin-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .admin-product-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .admin-product-table th, .admin-product-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .admin-product-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .admin-p-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
     }
 
     .header {
@@ -1007,6 +1131,11 @@
           <i class="fa-solid fa-moon" id="themeIcon"></i>
         </button>
 
+        <button class="btn btn-ghost btn-admin-nav" id="adminNavBtn" onclick="openAdminModal()" title="Login Admin / Owner">
+          <i class="fa-solid fa-user-shield" style="color: var(--accent-gold);"></i>
+          <span id="adminNavText">Admin</span>
+        </button>
+
         <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-primary">
           <i class="fa-brands fa-whatsapp"></i> Hubungi Kami
         </a>
@@ -1047,6 +1176,12 @@
           <a href="#tentang" class="mobile-nav-item">
             <span>Tentang</span>
             <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMobileMenu(); openAdminModal();">
+            <span>Admin / Owner Panel</span>
+            <i class="fa-solid fa-user-shield" style="color:var(--accent-gold);"></i>
           </a>
         </li>
       </ul>
@@ -1150,104 +1285,8 @@
           <p>Tambahkan ke keranjang untuk memesan secara mudah melalui WhatsApp.</p>
         </div>
 
-        <div class="product-grid">
-          <!-- Item 1 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/t-shirt.png" alt="Custom T-Shirt" onerror="this.src='https://placehold.co/400x300/181528/fff?text=T-Shirt'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom T-Shirt</h3>
-              <p class="product-desc">Cotton combed berkualitas dengan sablon tajam &amp; lembut.</p>
-              <button class="product-btn" onclick="addToCart('Custom T-Shirt', 'Cotton Combed Premium', 'assets/gambar/t-shirt.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 2 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/hoodie.png" alt="Custom Hoodie" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Hoodie'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Hoodie</h3>
-              <p class="product-desc">Bahan tebal hangat dengan hasil print detail &amp; awet.</p>
-              <button class="product-btn" onclick="addToCart('Custom Hoodie', 'Fleece Premium Custom', 'assets/gambar/hoodie.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 3 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/flag.png" alt="Custom Flag" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Flag'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Flag</h3>
-              <p class="product-desc">Bendera komunitas / event dengan warna tajam anti pudar.</p>
-              <button class="product-btn" onclick="addToCart('Custom Flag', 'Bahan Kain Satin/Satinet', 'assets/gambar/flag.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 4 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/sticker.png" alt="Custom Sticker" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Sticker'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Sticker</h3>
-              <p class="product-desc">Vinyl waterproof, die-cut/kiss-cut siap tempel.</p>
-              <button class="product-btn" onclick="addToCart('Custom Sticker', 'Stiker Vinyl Waterproof', 'assets/gambar/sticker.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 5 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/totebag.png" alt="Custom Tote Bag" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Tote+Bag'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Tote Bag</h3>
-              <p class="product-desc">Kanvas tebal kuat untuk kebutuhan harian &amp; hobi.</p>
-              <button class="product-btn" onclick="addToCart('Custom Tote Bag', 'Kanvas Premium Custom', 'assets/gambar/totebag.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 6 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/jersey.png" alt="Custom Jersey" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Jersey'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Jersey</h3>
-              <p class="product-desc">Sublimasi full print untuk tim olahraga atau esport.</p>
-              <button class="product-btn" onclick="addToCart('Custom Jersey', 'Dryfit Sublimation', 'assets/gambar/jersey.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
-
-          <!-- Item 7 -->
-          <article class="product-card glass-box">
-            <div class="product-img-wrapper">
-              <img src="assets/gambar/lainyya.png" alt="Custom Design Lainnya" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Custom+Design'" />
-            </div>
-            <div class="product-content">
-              <h3 class="product-title">Custom Design Lainnya</h3>
-              <p class="product-desc">Punya ide unik lain? Konsultasikan langsung dengan kami.</p>
-              <button class="product-btn" onclick="addToCart('Custom Design Lainnya', 'Request Khusus Customer', 'assets/gambar/lainyya.png', this)">
-                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
-              </button>
-            </div>
-          </article>
+        <div class="product-grid" id="productGridContainer">
+          <!-- Rendered dynamically via JavaScript -->
         </div>
       </div>
     </section>
@@ -1366,8 +1405,483 @@
     </div>
   </aside>
 
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay" id="adminLoginModal">
+    <div class="admin-modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-size:18px; font-weight:700;"><i class="fa-solid fa-lock" style="color:var(--primary); margin-right:8px;"></i> Login Admin / Owner</h3>
+        <button onclick="closeAdminModal()" style="background:transparent; color:var(--text-muted); font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="loginAlert" style="display:none; padding:10px 14px; background:rgba(225,29,42,0.18); border:1px solid var(--primary); border-radius:var(--radius-md); font-size:13px; color:#ff8b94; margin-bottom:16px;"></div>
+
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+        <div class="form-group">
+          <label for="adminUsername">Username Akun</label>
+          <input type="text" id="adminUsername" class="form-input" placeholder="Masukkan username" required />
+        </div>
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" class="form-input" placeholder="Masukkan password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard Modal -->
+  <div class="modal-overlay" id="adminDashboardModal">
+    <div class="admin-modal-card admin-modal-lg">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--glass-border); padding-bottom:14px;">
+        <div>
+          <h3 style="font-size:19px; font-weight:700;" id="dashboardGreeting">Dashboard Admin</h3>
+          <span style="font-size:12px; color:var(--text-muted);" id="userRoleBadge">Role: Owner</span>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-ghost" style="padding:6px 14px; font-size:12px;" onclick="handleAdminLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </button>
+          <button onclick="closeAdminDashboard()" style="background:transparent; color:var(--text-muted); font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button class="admin-tab-btn active" id="tabProductBtn" onclick="switchAdminTab('products')">
+          <i class="fa-solid fa-box-open"></i> Kelola Foto &amp; Produk
+        </button>
+        <button class="admin-tab-btn" id="tabAccountBtn" onclick="switchAdminTab('accounts')">
+          <i class="fa-solid fa-users-gear"></i> Buat / Kelola Akun Admin
+        </button>
+      </div>
+
+      <!-- Tab 1: Kelola Produk -->
+      <div id="adminTabProducts">
+        <div class="glass-box" style="padding:16px; margin-bottom:20px; text-align:left;">
+          <h4 style="font-size:15px; font-weight:700; margin-bottom:12px;" id="productFormTitle">Tambah / Edit Produk Baru</h4>
+          <input type="hidden" id="editProductId" value="" />
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label>Nama Produk</label>
+              <input type="text" id="pName" class="form-input" placeholder="cth: Custom Hoodie" required />
+            </div>
+            <div class="form-group">
+              <label>Bahan / Kategori Material</label>
+              <input type="text" id="pDesc" class="form-input" placeholder="cth: Fleece Premium Custom" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Deskripsi Singkat</label>
+            <input type="text" id="pSubDesc" class="form-input" placeholder="cth: Bahan tebal hangat dengan hasil print detail & awet." required />
+          </div>
+
+          <div class="form-group">
+            <label>Foto Produk (URL Gambar atau Upload)</label>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="pImgUrl" class="form-input" placeholder="https://... atau upload foto" />
+              <input type="file" id="pImgFile" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+              <button type="button" class="btn btn-ghost" onclick="document.getElementById('pImgFile').click()" style="padding:10px 14px; font-size:12px; white-space:nowrap;">
+                <i class="fa-solid fa-upload"></i> Upload Foto
+              </button>
+            </div>
+            <div id="pImgPreviewContainer" style="margin-top:10px; display:none;">
+              <img id="pImgPreview" src="" style="width:70px; height:70px; border-radius:8px; object-fit:cover; border:1px solid var(--glass-border-bright);" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <button type="button" class="btn btn-primary" onclick="saveProduct()">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Produk
+            </button>
+            <button type="button" class="btn btn-ghost" onclick="resetProductForm()">
+              Batal / Clear
+            </button>
+          </div>
+        </div>
+
+        <h4 style="font-size:15px; font-weight:700; text-align:left;">Daftar Produk Aktif</h4>
+        <div style="overflow-x:auto;">
+          <table class="admin-product-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nama Produk</th>
+                <th>Deskripsi Material</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Kelola Akun Admin -->
+      <div id="adminTabAccounts" style="display:none;">
+        <div class="glass-box" style="padding:16px; margin-bottom:20px; text-align:left;">
+          <h4 style="font-size:15px; font-weight:700; margin-bottom:12px;">Buatkan Akun Admin Baru</h4>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label>Username Admin Baru</label>
+              <input type="text" id="newAdminUser" class="form-input" placeholder="cth: admin2" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="newAdminPass" class="form-input" placeholder="Masukkan password" />
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-gold" onclick="createNewAdminAccount()" style="margin-top:8px;">
+            <i class="fa-solid fa-user-plus"></i> Buat Akun Admin
+          </button>
+        </div>
+
+        <h4 style="font-size:15px; font-weight:700; text-align:left;">Daftar Akun Terdaftar</h4>
+        <div style="overflow-x:auto;">
+          <table class="admin-product-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="adminUserTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    const DEFAULT_PRODUCTS = [
+      { id: 'p1', name: 'Custom T-Shirt', desc: 'Cotton Combed Premium', subDesc: 'Cotton combed berkualitas dengan sablon tajam & lembut.', img: 'assets/gambar/t-shirt.png' },
+      { id: 'p2', name: 'Custom Hoodie', desc: 'Fleece Premium Custom', subDesc: 'Bahan tebal hangat dengan hasil print detail & awet.', img: 'assets/gambar/hoodie.png' },
+      { id: 'p3', name: 'Custom Flag', desc: 'Bahan Kain Satin/Satinet', subDesc: 'Bendera komunitas / event dengan warna tajam anti pudar.', img: 'assets/gambar/flag.png' },
+      { id: 'p4', name: 'Custom Sticker', desc: 'Stiker Vinyl Waterproof', subDesc: 'Vinyl waterproof, die-cut/kiss-cut siap tempel.', img: 'assets/gambar/sticker.png' },
+      { id: 'p5', name: 'Custom Tote Bag', desc: 'Kanvas Premium Custom', subDesc: 'Kanvas tebal kuat untuk kebutuhan harian & hobi.', img: 'assets/gambar/totebag.png' },
+      { id: 'p6', name: 'Custom Jersey', desc: 'Dryfit Sublimation', subDesc: 'Sublimasi full print untuk tim olahraga atau esport.', img: 'assets/gambar/jersey.png' },
+      { id: 'p7', name: 'Custom Design Lainnya', desc: 'Request Khusus Customer', subDesc: 'Punya ide unik lain? Konsultasikan langsung dengan kami.', img: 'assets/gambar/lainyya.png' }
+    ];
+
+    const DEFAULT_ACCOUNTS = [
+      { username: 'admin', pass: '123', role: 'Owner' }
+    ];
+
+    function getStoredProducts() {
+      const stored = localStorage.getItem('ccl_products');
+      if (!stored) {
+        localStorage.setItem('ccl_products', JSON.stringify(DEFAULT_PRODUCTS));
+        return DEFAULT_PRODUCTS;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveStoredProducts(products) {
+      localStorage.setItem('ccl_products', JSON.stringify(products));
+      renderProducts();
+    }
+
+    function getStoredAccounts() {
+      const stored = localStorage.getItem('ccl_accounts');
+      if (!stored) {
+        localStorage.setItem('ccl_accounts', JSON.stringify(DEFAULT_ACCOUNTS));
+        return DEFAULT_ACCOUNTS;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveStoredAccounts(accounts) {
+      localStorage.setItem('ccl_accounts', JSON.stringify(accounts));
+    }
+
+    let activeUserSession = JSON.parse(sessionStorage.getItem('ccl_session')) || null;
+
+    function renderProducts() {
+      const products = getStoredProducts();
+      const container = document.getElementById('productGridContainer');
+      container.innerHTML = '';
+
+      products.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'product-card glass-box';
+        card.innerHTML = `
+          <div class="product-img-wrapper">
+            <img src="${p.img}" alt="${p.name}" onerror="this.src='https://placehold.co/400x300/181528/fff?text=${encodeURIComponent(p.name)}'" />
+          </div>
+          <div class="product-content">
+            <h3 class="product-title">${p.name}</h3>
+            <p class="product-desc">${p.subDesc || p.desc}</p>
+            <button class="product-btn" onclick="addToCart('${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.img.replace(/'/g, "\\'")}', this)">
+              <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    renderProducts();
+
+    // Update navbar session indicator
+    function updateAdminNavState() {
+      const btnText = document.getElementById('adminNavText');
+      if (activeUserSession) {
+        btnText.textContent = activeUserSession.username;
+      } else {
+        btnText.textContent = 'Admin';
+      }
+    }
+    updateAdminNavState();
+
+    function openAdminModal() {
+      if (activeUserSession) {
+        openAdminDashboard();
+      } else {
+        document.getElementById('loginAlert').style.display = 'none';
+        document.getElementById('adminLoginModal').classList.add('active');
+      }
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminLoginModal').classList.remove('active');
+    }
+
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const userVal = document.getElementById('adminUsername').value.trim();
+      const passVal = document.getElementById('adminPassword').value.trim();
+      const alertBox = document.getElementById('loginAlert');
+
+      const accounts = getStoredAccounts();
+      const match = accounts.find(a => a.username === userVal && a.pass === passVal);
+
+      if (match) {
+        activeUserSession = match;
+        sessionStorage.setItem('ccl_session', JSON.stringify(match));
+        closeAdminModal();
+        updateAdminNavState();
+        openAdminDashboard();
+      } else {
+        alertBox.textContent = 'Username atau password salah! (Default Owner: admin / 123)';
+        alertBox.style.display = 'block';
+      }
+    }
+
+    function handleAdminLogout() {
+      activeUserSession = null;
+      sessionStorage.removeItem('ccl_session');
+      closeAdminDashboard();
+      updateAdminNavState();
+    }
+
+    function openAdminDashboard() {
+      if (!activeUserSession) return;
+      document.getElementById('dashboardGreeting').textContent = `Dashboard ${activeUserSession.role}: ${activeUserSession.username}`;
+      document.getElementById('userRoleBadge').textContent = `Role Hak Akses: ${activeUserSession.role}`;
+      document.getElementById('adminDashboardModal').classList.add('active');
+      
+      switchAdminTab('products');
+      renderAdminProductTable();
+      renderAdminAccountTable();
+    }
+
+    function closeAdminDashboard() {
+      document.getElementById('adminDashboardModal').classList.remove('active');
+    }
+
+    function switchAdminTab(tab) {
+      const tabProdBtn = document.getElementById('tabProductBtn');
+      const tabAccBtn = document.getElementById('tabAccountBtn');
+      const viewProd = document.getElementById('adminTabProducts');
+      const viewAcc = document.getElementById('adminTabAccounts');
+
+      if (tab === 'products') {
+        tabProdBtn.classList.add('active');
+        tabAccBtn.classList.remove('active');
+        viewProd.style.display = 'block';
+        viewAcc.style.display = 'none';
+      } else {
+        tabProdBtn.classList.remove('active');
+        tabAccBtn.classList.add('active');
+        viewProd.style.display = 'none';
+        viewAcc.style.display = 'block';
+      }
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64Img = evt.target.result;
+        document.getElementById('pImgUrl').value = base64Img;
+        document.getElementById('pImgPreview').src = base64Img;
+        document.getElementById('pImgPreviewContainer').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveProduct() {
+      const editId = document.getElementById('editProductId').value;
+      const name = document.getElementById('pName').value.trim();
+      const desc = document.getElementById('pDesc').value.trim();
+      const subDesc = document.getElementById('pSubDesc').value.trim();
+      let img = document.getElementById('pImgUrl').value.trim();
+
+      if (!name || !desc) {
+        alert('Mohon isi nama produk dan deskripsi bahan!');
+        return;
+      }
+
+      if (!img) {
+        img = 'https://placehold.co/400x300/181528/fff?text=' + encodeURIComponent(name);
+      }
+
+      let products = getStoredProducts();
+
+      if (editId) {
+        // Update Existing Product
+        products = products.map(p => {
+          if (p.id === editId) {
+            return { ...p, name, desc, subDesc, img };
+          }
+          return p;
+        });
+      } else {
+        // Add New Product
+        const newId = 'p_' + Date.now();
+        products.push({ id: newId, name, desc, subDesc, img });
+      }
+
+      saveStoredProducts(products);
+      resetProductForm();
+      renderAdminProductTable();
+    }
+
+    function editProduct(id) {
+      const products = getStoredProducts();
+      const target = products.find(p => p.id === id);
+      if (!target) return;
+
+      document.getElementById('editProductId').value = target.id;
+      document.getElementById('pName').value = target.name;
+      document.getElementById('pDesc').value = target.desc;
+      document.getElementById('pSubDesc').value = target.subDesc || '';
+      document.getElementById('pImgUrl').value = target.img;
+      document.getElementById('pImgPreview').src = target.img;
+      document.getElementById('pImgPreviewContainer').style.display = 'block';
+      document.getElementById('productFormTitle').textContent = 'Edit Produk: ' + target.name;
+    }
+
+    function deleteProduct(id) {
+      if (!confirm('Apakah kamu yakin ingin menghapus produk ini?')) return;
+      let products = getStoredProducts();
+      products = products.filter(p => p.id !== id);
+      saveStoredProducts(products);
+      renderAdminProductTable();
+    }
+
+    function resetProductForm() {
+      document.getElementById('editProductId').value = '';
+      document.getElementById('pName').value = '';
+      document.getElementById('pDesc').value = '';
+      document.getElementById('pSubDesc').value = '';
+      document.getElementById('pImgUrl').value = '';
+      document.getElementById('pImgFile').value = '';
+      document.getElementById('pImgPreviewContainer').style.display = 'none';
+      document.getElementById('productFormTitle').textContent = 'Tambah / Edit Produk Baru';
+    }
+
+    function renderAdminProductTable() {
+      const products = getStoredProducts();
+      const tbody = document.getElementById('adminProductTableBody');
+      tbody.innerHTML = '';
+
+      products.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><img src="${p.img}" class="admin-p-img" onerror="this.src='https://placehold.co/100x100/181528/fff?text=IMG'" /></td>
+          <td style="font-weight:600;">${p.name}</td>
+          <td style="color:var(--text-muted);">${p.desc}</td>
+          <td>
+            <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick="editProduct('${p.id}')">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:#ff8b94; border-color:rgba(225,29,42,0.3);" onclick="deleteProduct('${p.id}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function createNewAdminAccount() {
+      const u = document.getElementById('newAdminUser').value.trim();
+      const p = document.getElementById('newAdminPass').value.trim();
+
+      if (!u || !p) {
+        alert('Isi username dan password untuk akun admin baru!');
+        return;
+      }
+
+      const accounts = getStoredAccounts();
+      if (accounts.some(a => a.username === u)) {
+        alert('Username ini sudah ada!');
+        return;
+      }
+
+      accounts.push({ username: u, pass: p, role: 'Admin' });
+      saveStoredAccounts(accounts);
+
+      document.getElementById('newAdminUser').value = '';
+      document.getElementById('newAdminPass').value = '';
+      alert('Akun admin baru "' + u + '" berhasil dibuat!');
+      renderAdminAccountTable();
+    }
+
+    function deleteAdminAccount(username) {
+      if (username === 'admin') {
+        alert('Akun Owner utama tidak dapat dihapus!');
+        return;
+      }
+      if (!confirm('Hapus akun admin "' + username + '"?')) return;
+
+      let accounts = getStoredAccounts();
+      accounts = accounts.filter(a => a.username !== username);
+      saveStoredAccounts(accounts);
+      renderAdminAccountTable();
+    }
+
+    function renderAdminAccountTable() {
+      const accounts = getStoredAccounts();
+      const tbody = document.getElementById('adminUserTableBody');
+      tbody.innerHTML = '';
+
+      accounts.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;">${a.username}</td>
+          <td><span style="padding:2px 8px; border-radius:10px; font-size:11px; background:${a.role === 'Owner' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.1)'}; color:${a.role === 'Owner' ? 'var(--accent-gold)' : 'var(--text-main)'}">${a.role}</span></td>
+          <td>
+            ${a.role !== 'Owner' ? `<button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:#ff8b94;" onclick="deleteAdminAccount('${a.username}')"><i class="fa-solid fa-user-minus"></i> Hapus</button>` : '<span style="font-size:11px; color:var(--text-muted);">Protected</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
     // 1. Theme Toggle Logic (Light / Dark Mode)
     const themeToggleBtn = document.getElementById('themeToggleBtn');
