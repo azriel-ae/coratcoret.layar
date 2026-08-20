@@ -1,0 +1,1605 @@
+<!doctype html>
+<html lang="id" data-theme="dark" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Corat Coret Layar - Custom Design Premium</title>
+  <meta name="description" content="Custom design premium: kaos, hoodie, flag, sticker, tote bag, jersey, dan lainnya. Harga terjangkau, cepat, full custom." />
+  <meta name="keywords" content="custom t-shirt, custom hoodie, custom sticker, custom flag, custom banner, merchandise custom, desain kaos, corat coret layar" />
+  <meta name="theme-color" content="#100E17" id="theme-color-meta" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Corat Coret Layar - Custom Design Premium" />
+  <meta property="og:description" content="Custom design merchandise premium: kaos, flag, sticker, hoodie, tote bag, jersey, dan lainnya." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/gambar/logo-badge.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/gambar/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/gambar/favicon.png" />
+
+  <!-- Fonts + FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    /* CSS Variables for Dark (Default) & Light Mode */
+    :root {
+      /* Dark Theme (Default) */
+      --bg: #100E17;
+      --bg-gradient: radial-gradient(900px 500px at 15% 10%, rgba(220,38,38,.24), transparent 65%),
+                      radial-gradient(700px 420px at 85% 0%, rgba(250,204,21,.16), transparent 60%),
+                      radial-gradient(600px 380px at 50% 100%, rgba(253,224,71,.08), transparent 65%),
+                      linear-gradient(180deg, #14111C 0%, #100E17 40%, #0D0B13 100%);
+      --primary: #E11D2A;
+      --primary-hover: #F43F5E;
+      --accent-gold: #F59E0B;
+      --accent-gold-light: #FBBF24;
+      --accent-green: #10B981;
+      
+      --text-main: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.78);
+      --text-sub: rgba(255, 255, 255, 0.58);
+      
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-bg-hover: rgba(255, 255, 255, 0.10);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-border-bright: rgba(255, 255, 255, 0.25);
+      --header-bg: rgba(16, 14, 23, 0.85);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --drawer-bg: #111018;
+      
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55);
+      --shadow-glow: 0 10px 30px rgba(225, 29, 42, 0.35);
+      
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-full: 9999px;
+      --max-width: 1140px;
+    }
+
+    [data-theme="light"] {
+      /* Light Theme Override - Tema Putih & Merah Premium */
+      --bg: #FFFFFF;
+      --bg-gradient: radial-gradient(900px 500px at 15% 10%, rgba(225, 29, 42, 0.15), transparent 65%),
+                      radial-gradient(700px 420px at 85% 0%, rgba(225, 29, 42, 0.10), transparent 60%),
+                      radial-gradient(600px 380px at 50% 100%, rgba(255, 241, 242, 0.8), transparent 65%),
+                      linear-gradient(180deg, #FFFFFF 0%, #FFF5F5 50%, #FFE4E6 100%);
+      --primary: #E11D2A;
+      --primary-hover: #B91C1C;
+      --accent-gold: #DC2626;
+      --accent-gold-light: #EF4444;
+      --accent-green: #10B981;
+      
+      --text-main: #18181B;
+      --text-muted: #475569;
+      --text-sub: #64748B;
+      
+      --glass-bg: rgba(255, 255, 255, 0.92);
+      --glass-bg-hover: rgba(254, 242, 242, 0.95);
+      --glass-border: rgba(225, 29, 42, 0.22);
+      --glass-border-bright: rgba(225, 29, 42, 0.45);
+      --header-bg: rgba(255, 255, 255, 0.94);
+      --card-bg: #FFFFFF;
+      --drawer-bg: #FFFFFF;
+      
+      --shadow-lg: 0 15px 35px rgba(225, 29, 42, 0.08);
+      --shadow-glow: 0 8px 25px rgba(225, 29, 42, 0.28);
+    }
+
+    [data-theme="light"] .btn-ghost {
+      background: #FFFFFF;
+      color: #E11D2A;
+      border: 1.5px solid rgba(225, 29, 42, 0.35);
+    }
+
+    [data-theme="light"] .btn-ghost:hover {
+      background: #FFF1F2;
+      border-color: #E11D2A;
+      color: #991B1B;
+    }
+
+    [data-theme="light"] .hero-title .gradient-text {
+      background: linear-gradient(135deg, #18181B 20%, #E11D2A 70%, #991B1B 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .footer {
+      background: rgba(254, 242, 242, 0.75);
+      border-top-color: rgba(225, 29, 42, 0.2);
+    }
+
+    [data-theme="light"] .badge {
+      background: rgba(225, 29, 42, 0.08);
+      border-color: rgba(225, 29, 42, 0.25);
+      color: #E11D2A;
+    }
+
+    [data-theme="light"] .step-number {
+      background: linear-gradient(135deg, #E11D2A, #991B1B);
+      color: #FFFFFF;
+    }
+
+    [data-theme="light"] .btn-gold {
+      background: linear-gradient(135deg, #E11D2A, #B91C1C);
+      color: #FFFFFF;
+      box-shadow: 0 8px 20px rgba(225, 29, 42, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+
+    .container {
+      width: min(var(--max-width), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .glass-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .glass-box:hover {
+      border-color: var(--glass-border-bright);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #F43F5E);
+      color: #FFFFFF;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(225, 29, 42, 0.45);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--accent-gold), #D97706);
+      color: #000000;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(245, 158, 11, 0.45);
+    }
+
+    .btn-ghost {
+      background: var(--glass-bg);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-bright);
+      transform: translateY(-2px);
+    }
+
+    /* Theme Switcher Toggle Button */
+    .theme-toggle-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-bright);
+      transform: rotate(20deg) scale(1.05);
+    }
+
+    .section-head {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 48px auto;
+    }
+
+    .section-head .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--accent-gold);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-head h2 {
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .section-head p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      transition: all 0.35s ease;
+      padding: 20px 0;
+    }
+
+    .header.scrolled {
+      padding: 12px 0;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 1002;
+    }
+
+    .brand-logo img {
+      width: 58px;
+      height: 58px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      box-shadow: var(--shadow-glow);
+      border: 1.5px solid var(--glass-border-bright);
+    }
+
+    .brand-logo span {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      position: relative;
+      padding: 6px 0;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--text-main);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent-gold));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Mobile Menu Drawer */
+    .nav-toggle {
+      display: none;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 1002;
+    }
+
+    .nav-toggle span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background-color: var(--text-main);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-toggle.active span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .nav-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .nav-toggle.active span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .mobile-menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .mobile-menu-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-menu-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(320px, 85vw);
+      height: 100vh;
+      background: var(--drawer-bg);
+      border-left: 1px solid var(--glass-border);
+      z-index: 1001;
+      padding: 100px 28px 40px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mobile-menu-drawer.active {
+      transform: translateX(0);
+    }
+
+    .mobile-nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mobile-nav-links a {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+    }
+
+    .mobile-nav-links a:hover,
+    .mobile-nav-links a.active {
+      color: var(--text-main);
+      background: var(--glass-bg-hover);
+    }
+
+    .hero {
+      padding-top: 150px;
+      padding-bottom: 70px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-logo-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 36px;
+      animation: floatLogo 6s ease-in-out infinite;
+    }
+
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .hero-logo-glow {
+      position: absolute;
+      inset: -60px;
+      background: radial-gradient(circle, rgba(225, 29, 42, 0.45) 0%, rgba(245, 158, 11, 0.3) 50%, transparent 70%);
+      filter: blur(50px);
+      border-radius: 50%;
+      z-index: 0;
+    }
+
+    .hero-logo-img {
+      position: relative;
+      z-index: 1;
+      width: clamp(380px, 70vw, 750px);
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 25px 45px rgba(0,0,0,0.5));
+      border-radius: var(--radius-xl);
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 850px;
+      margin: 0 auto 16px auto;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, var(--text-main) 30%, var(--accent-gold) 70%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto 32px auto;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .typing-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: var(--text-main);
+      margin-bottom: 24px;
+    }
+
+    .typing-badge i {
+      color: var(--accent-gold);
+    }
+
+    .products-section {
+      padding: 70px 0;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: var(--radius-xl);
+    }
+
+    .product-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-img-wrapper img {
+      transform: scale(1.06);
+    }
+
+    .product-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .product-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .product-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      flex-grow: 1;
+    }
+
+    .product-btn {
+      width: 100%;
+      padding: 11px;
+      font-size: 13px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+      font-weight: 600;
+    }
+
+    .product-btn:hover {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .product-btn.added {
+      background: var(--accent-green) !important;
+      border-color: var(--accent-green) !important;
+      color: #FFFFFF !important;
+    }
+
+    .steps-section {
+      padding: 70px 0;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .step-card {
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .step-number {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-gold), var(--primary));
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px auto;
+    }
+
+    .step-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .step-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer {
+      padding: 60px 0 30px 0;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(0, 0, 0, 0.15);
+      margin-top: 60px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      max-width: 320px;
+    }
+
+    .footer-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links a {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-gold);
+    }
+
+    .footer-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .footer-contact-item i {
+      color: var(--accent-gold);
+      width: 18px;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--glass-border);
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    .floating-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .float-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-size: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      position: relative;
+      transition: transform 0.25s ease;
+    }
+
+    .float-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .float-btn-theme {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border-bright);
+      color: var(--text-main);
+      backdrop-filter: blur(10px);
+    }
+
+    .float-btn-cart {
+      background: linear-gradient(135deg, var(--accent-gold), #D97706);
+      color: #000000;
+    }
+
+    .float-btn-wa {
+      background: #25D366;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--primary);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .cart-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .cart-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(400px, 100vw);
+      background: var(--drawer-bg);
+      border-left: 1px solid var(--glass-border);
+      z-index: 2001;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cart-panel.active {
+      transform: translateX(0);
+    }
+
+    .cart-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cart-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cart-close-btn {
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 20px;
+    }
+
+    .cart-items-body {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cart-empty-text {
+      text-align: center;
+      color: var(--text-muted);
+      margin: auto 0;
+      font-size: 14px;
+    }
+
+    .cart-item-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+    }
+
+    .cart-item-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .cart-item-info {
+      flex-grow: 1;
+    }
+
+    .cart-item-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .cart-item-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .cart-item-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .qty-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: var(--glass-bg-hover);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      font-size: 12px;
+    }
+
+    .cart-footer {
+      padding: 20px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .btn-checkout-wa {
+      width: 100%;
+      background: #25D366;
+      color: #FFFFFF;
+      font-weight: 700;
+      padding: 13px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+    }
+
+    .btn-checkout-wa:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Media Queries */
+    @media (max-width: 868px) {
+      .nav-links, .nav-actions {
+        display: none;
+      }
+      .nav-toggle {
+        display: flex;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .hero {
+        padding-top: 120px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header" id="navbar">
+    <div class="container nav">
+      <a href="#home" class="brand-logo">
+        <img src="assets/gambar/logo-badge.png" alt="Corat Coret Layar Logo" onerror="this.src='https://placehold.co/100x100/e11d2a/fff?text=CCL'" />
+        <span>Corat Coret Layar</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <ul class="nav-links">
+        <li><a href="#home" class="nav-item-link active">Home</a></li>
+        <li><a href="#produk" class="nav-item-link">Produk</a></li>
+        <li><a href="#cara-order" class="nav-item-link">Cara Order</a></li>
+        <li><a href="#tentang" class="nav-item-link">Tentang</a></li>
+      </ul>
+
+      <!-- Desktop Action CTA & Light/Dark Theme Switcher -->
+      <div class="nav-actions">
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Ganti Mode Cerah/Gelap" title="Ganti Mode Theme">
+          <i class="fa-solid fa-moon" id="themeIcon"></i>
+        </button>
+
+        <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-primary">
+          <i class="fa-brands fa-whatsapp"></i> Hubungi Kami
+        </a>
+      </div>
+
+      <!-- Mobile Toggle Button -->
+      <button class="nav-toggle" id="navToggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu Overlay -->
+  <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+  <aside class="mobile-menu-drawer" id="mobileMenuDrawer">
+    <div>
+      <ul class="mobile-nav-links">
+        <li>
+          <a href="#home" class="mobile-nav-item active">
+            <span>Home</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+        <li>
+          <a href="#produk" class="mobile-nav-item">
+            <span>Produk</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+        <li>
+          <a href="#cara-order" class="mobile-nav-item">
+            <span>Cara Order</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+        <li>
+          <a href="#tentang" class="mobile-nav-item">
+            <span>Tentang</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div style="border-top: 1px solid var(--glass-border); padding-top: 20px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+        <span style="font-size:14px; font-weight:600;">Mode Tampilan</span>
+        <button class="theme-toggle-btn" id="mobileThemeToggleBtn" aria-label="Ganti Mode Theme">
+          <i class="fa-solid fa-moon" id="mobileThemeIcon"></i>
+        </button>
+      </div>
+      <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-gold" style="width: 100%;">
+        <i class="fa-brands fa-whatsapp"></i> Chat WhatsApp Admin
+      </a>
+    </div>
+  </aside>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="container">
+        
+        <div class="hero-logo-wrapper">
+          <div class="hero-logo-glow"></div>
+          <img 
+            src="assets/gambar/logo-full.png" 
+            alt="Corat Coret Layar Big Logo" 
+            class="hero-logo-img" 
+            onerror="this.src='https://placehold.co/600x600/100E17/f59e0b?text=Corat+Coret+Layar'"
+          />
+        </div>
+
+        <div style="display: flex; justify-content: center;">
+          <div class="typing-badge glass-box">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Kita Siap Buat: <strong id="typingText" style="color:var(--accent-gold);">Custom T-Shirt</strong></span>
+          </div>
+        </div>
+
+        <h1 class="hero-title">
+          Custom Design Merchandise <br />
+          <span class="gradient-text">Premium &amp; Full Custom</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Bikin Kaos, Hoodie, Sticker, Flag, Tote Bag, dan Jersey sesuai imajinasi kamu. Hasil rapi, detail presisi, dan pengerjaan cepat.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#produk" class="btn btn-primary">
+            <i class="fa-solid fa-bag-shopping"></i> Lihat Katalog Produk
+          </a>
+          <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-ghost">
+            <i class="fa-brands fa-whatsapp"></i> Konsultasi Gratis
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="tentang" style="padding: 60px 0;">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge"><i class="fa-solid fa-star"></i> Kenapa Memilih Kami</span>
+          <h2>Kualitas Terbaik Tanpa Kompromi</h2>
+          <p>Kami memastikan setiap merchandise custom diproduksi dengan bahan pilihan & cetakan tahan lama.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+          <div class="glass-box" style="padding: 28px 24px;">
+            <div style="width:48px; height:48px; border-radius:12px; background:rgba(225,29,42,0.12); display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:20px; margin-bottom:18px;">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Bahan Premium</h3>
+            <p style="font-size:13.5px; color:var(--text-muted);">Material kain, sablon, dan cetakan stiker kelas industri dengan standar kerapian tinggi.</p>
+          </div>
+
+          <div class="glass-box" style="padding: 28px 24px;">
+            <div style="width:48px; height:48px; border-radius:12px; background:rgba(245,158,11,0.12); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-size:20px; margin-bottom:18px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Full Custom Design</h3>
+            <p style="font-size:13.5px; color:var(--text-muted);">Bebas berkreasi tanpa batas minimum order untuk beragam pilihan merchandise.</p>
+          </div>
+
+          <div class="glass-box" style="padding: 28px 24px;">
+            <div style="width:48px; height:48px; border-radius:12px; background:rgba(16,185,129,0.12); display:flex; align-items:center; justify-content:center; color:var(--accent-green); font-size:20px; margin-bottom:18px;">
+              <i class="fa-solid fa-truck-fast"></i>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Proses Cepat</h3>
+            <p style="font-size:13.5px; color:var(--text-muted);">Estimasi waktu pengerjaan fleksibel dan tepat waktu agar siap dipakai saat event.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="produk" class="products-section">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge"><i class="fa-solid fa-fire"></i> Katalog Pilihan</span>
+          <h2>Pilih Merchandise Favoritmu</h2>
+          <p>Tambahkan ke keranjang untuk memesan secara mudah melalui WhatsApp.</p>
+        </div>
+
+        <div class="product-grid">
+          <!-- Item 1 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/t-shirt.png" alt="Custom T-Shirt" onerror="this.src='https://placehold.co/400x300/181528/fff?text=T-Shirt'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom T-Shirt</h3>
+              <p class="product-desc">Cotton combed berkualitas dengan sablon tajam &amp; lembut.</p>
+              <button class="product-btn" onclick="addToCart('Custom T-Shirt', 'Cotton Combed Premium', 'assets/gambar/t-shirt.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 2 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/hoodie.png" alt="Custom Hoodie" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Hoodie'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Hoodie</h3>
+              <p class="product-desc">Bahan tebal hangat dengan hasil print detail &amp; awet.</p>
+              <button class="product-btn" onclick="addToCart('Custom Hoodie', 'Fleece Premium Custom', 'assets/gambar/hoodie.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 3 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/flag.png" alt="Custom Flag" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Flag'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Flag</h3>
+              <p class="product-desc">Bendera komunitas / event dengan warna tajam anti pudar.</p>
+              <button class="product-btn" onclick="addToCart('Custom Flag', 'Bahan Kain Satin/Satinet', 'assets/gambar/flag.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 4 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/sticker.png" alt="Custom Sticker" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Sticker'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Sticker</h3>
+              <p class="product-desc">Vinyl waterproof, die-cut/kiss-cut siap tempel.</p>
+              <button class="product-btn" onclick="addToCart('Custom Sticker', 'Stiker Vinyl Waterproof', 'assets/gambar/sticker.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 5 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/totebag.png" alt="Custom Tote Bag" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Tote+Bag'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Tote Bag</h3>
+              <p class="product-desc">Kanvas tebal kuat untuk kebutuhan harian &amp; hobi.</p>
+              <button class="product-btn" onclick="addToCart('Custom Tote Bag', 'Kanvas Premium Custom', 'assets/gambar/totebag.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 6 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/jersey.png" alt="Custom Jersey" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Jersey'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Jersey</h3>
+              <p class="product-desc">Sublimasi full print untuk tim olahraga atau esport.</p>
+              <button class="product-btn" onclick="addToCart('Custom Jersey', 'Dryfit Sublimation', 'assets/gambar/jersey.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+
+          <!-- Item 7 -->
+          <article class="product-card glass-box">
+            <div class="product-img-wrapper">
+              <img src="assets/gambar/lainyya.png" alt="Custom Design Lainnya" onerror="this.src='https://placehold.co/400x300/181528/fff?text=Custom+Design'" />
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">Custom Design Lainnya</h3>
+              <p class="product-desc">Punya ide unik lain? Konsultasikan langsung dengan kami.</p>
+              <button class="product-btn" onclick="addToCart('Custom Design Lainnya', 'Request Khusus Customer', 'assets/gambar/lainyya.png', this)">
+                <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="cara-order" class="steps-section">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge"><i class="fa-solid fa-route"></i> Alur Pemesanan</span>
+          <h2>5 Langkah Mudah Order</h2>
+          <p>Proses praktis dan transparan dari awal hingga produk tiba di tempatmu.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card glass-box">
+            <div class="step-number">1</div>
+            <h3>Pilih Produk</h3>
+            <p>Pilih barang dari katalog atau konsultasikan ide ke admin.</p>
+          </div>
+
+          <div class="step-card glass-box">
+            <div class="step-number">2</div>
+            <h3>Kirim Desain</h3>
+            <p>Kirimkan file desain/gambar yang ingin kamu buat.</p>
+          </div>
+
+          <div class="step-card glass-box">
+            <div class="step-number">3</div>
+            <h3>Preview &amp; Acc</h3>
+            <p>Admin akan mengirimkan mockup preview sebelum cetak.</p>
+          </div>
+
+          <div class="step-card glass-box">
+            <div class="step-number">4</div>
+            <h3>Produksi</h3>
+            <p>Proses cetak kilat dengan pengawasan kualitas ketat.</p>
+          </div>
+
+          <div class="step-card glass-box">
+            <div class="step-number">5</div>
+            <h3>Pengiriman</h3>
+            <p>Pesanan dikemas rapi &amp; dikirim langsung ke alamatmu.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <img src="assets/gambar/logo-badge.png" alt="Logo Footer" onerror="this.src='https://placehold.co/80x80/e11d2a/fff?text=CCL'" />
+            <span>Corat Coret Layar</span>
+          </div>
+          <p>Penyedia jasa custom design merchandise premium. Kami siap mewujudkan kreasi visual kamu menjadi produk nyata berkualitas.</p>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Navigasi Ringkas</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#produk">Produk</a></li>
+            <li><a href="#cara-order">Cara Order</a></li>
+            <li><a href="#tentang">Tentang Kami</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Hubungi Kami</h4>
+          <div class="footer-contact-item">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>+62 813-3338-5899</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-brands fa-instagram"></i>
+            <span>@coratcoret.merch</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Jawi Candiwates, Prigen</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-clock"></i>
+            <span>Senin - Sabtu (08.00 - 22.00)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; <span id="year">2026</span> Corat Coret Layar. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="floating-container">
+    <!-- Floating Theme Switcher Button -->
+    <button class="float-btn float-btn-theme" id="floatThemeBtn" aria-label="Ganti Theme" title="Mode Tampilan">
+      <i class="fa-solid fa-sun" id="floatThemeIcon"></i>
+    </button>
+    <button class="float-btn float-btn-cart" id="cartOpenBtn" aria-label="Buka Keranjang">
+      <i class="fa-solid fa-cart-shopping"></i>
+      <span class="cart-badge" id="cartBadgeCount" style="display:none;">0</span>
+    </button>
+    <a href="https://wa.me/6281333385899" target="_blank" class="float-btn float-btn-wa" aria-label="Chat WhatsApp">
+      <i class="fa-brands fa-whatsapp"></i>
+    </a>
+  </div>
+
+  <!-- Cart Drawer Overlay & Panel -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <h3><i class="fa-solid fa-bag-shopping"></i> Keranjang Saya</h3>
+      <button class="cart-close-btn" id="cartCloseBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="cart-items-body" id="cartItemsList">
+      <p class="cart-empty-text">Keranjang kamu masih kosong.</p>
+    </div>
+
+    <div class="cart-footer">
+      <button class="btn-checkout-wa" id="checkoutBtn" disabled onclick="checkoutWhatsApp()">
+        <i class="fa-brands fa-whatsapp"></i> Checkout via WhatsApp
+      </button>
+    </div>
+  </aside>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      /* 1. Theme Controller Logic (Light / Dark Mode Switcher) */
+      const htmlElement = document.documentElement;
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const themeIcon = document.getElementById('themeIcon');
+      const mobileThemeToggleBtn = document.getElementById('mobileThemeToggleBtn');
+      const mobileThemeIcon = document.getElementById('mobileThemeIcon');
+      const floatThemeBtn = document.getElementById('floatThemeBtn');
+      const floatThemeIcon = document.getElementById('floatThemeIcon');
+      const themeColorMeta = document.getElementById('theme-color-meta');
+
+      // Check saved theme from LocalStorage or system preference
+      const savedTheme = localStorage.getItem('ccl_theme') || 
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+      setTheme(savedTheme);
+
+      function setTheme(theme) {
+        htmlElement.setAttribute('data-theme', theme);
+        localStorage.setItem('ccl_theme', theme);
+
+        const isLight = theme === 'light';
+        
+        // Update Icons
+        const iconClass = isLight ? 'fa-sun' : 'fa-moon';
+        themeIcon.className = `fa-solid ${iconClass}`;
+        if (mobileThemeIcon) mobileThemeIcon.className = `fa-solid ${iconClass}`;
+        if (floatThemeIcon) floatThemeIcon.className = `fa-solid ${iconClass}`;
+
+        // Meta Theme Color update for mobile browsers
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', isLight ? '#F8FAFC' : '#100E17');
+        }
+      }
+
+      function toggleTheme() {
+        const currentTheme = htmlElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+      }
+
+      themeToggleBtn.addEventListener('click', toggleTheme);
+      if (mobileThemeToggleBtn) mobileThemeToggleBtn.addEventListener('click', toggleTheme);
+      if (floatThemeBtn) floatThemeBtn.addEventListener('click', toggleTheme);
+
+      /* 2. Header Scroll Effect */
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 30) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+
+      /* 3. Mobile Navigation Drawer Logic */
+      const navToggle = document.getElementById('navToggle');
+      const mobileMenuDrawer = document.getElementById('mobileMenuDrawer');
+      const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+      const mobileNavLinks = document.querySelectorAll('.mobile-nav-item');
+
+      function openMobileMenu() {
+        navToggle.classList.add('active');
+        navToggle.setAttribute('aria-expanded', 'true');
+        mobileMenuDrawer.classList.add('active');
+        mobileMenuOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileMenu() {
+        navToggle.classList.remove('active');
+        navToggle.setAttribute('aria-expanded', 'false');
+        mobileMenuDrawer.classList.remove('active');
+        mobileMenuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      navToggle.addEventListener('click', () => {
+        if (mobileMenuDrawer.classList.contains('active')) {
+          closeMobileMenu();
+        } else {
+          openMobileMenu();
+        }
+      });
+
+      mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+      mobileNavLinks.forEach(link => link.addEventListener('click', closeMobileMenu));
+
+      /* 4. Typing Effect in Hero Section */
+      const typingText = document.getElementById('typingText');
+      const productsList = ['Custom T-Shirt', 'Custom Hoodie', 'Custom Flag', 'Custom Sticker', 'Custom Tote Bag', 'Custom Jersey'];
+      let productIndex = 0;
+      let charIndex = 0;
+      let isDeleting = false;
+
+      function typeEffect() {
+        const currentWord = productsList[productIndex];
+        
+        if (isDeleting) {
+          typingText.textContent = currentWord.substring(0, charIndex - 1);
+          charIndex--;
+        } else {
+          typingText.textContent = currentWord.substring(0, charIndex + 1);
+          charIndex++;
+        }
+
+        let typeSpeed = isDeleting ? 60 : 120;
+
+        if (!isDeleting && charIndex === currentWord.length) {
+          typeSpeed = 2000; // Pause at end
+          isDeleting = true;
+        } else if (isDeleting && charIndex === 0) {
+          isDeleting = false;
+          productIndex = (productIndex + 1) % productsList.length;
+          typeSpeed = 500;
+        }
+
+        setTimeout(typeEffect, typeSpeed);
+      }
+
+      if (typingText) setTimeout(typeEffect, 1000);
+    });
+
+    /* 5. Cart Management Logic */
+    let cart = [];
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadgeCount');
+      const container = document.getElementById('cartItemsList');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+
+      const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+
+      if (totalItems > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = totalItems;
+        checkoutBtn.disabled = false;
+      } else {
+        badge.style.display = 'none';
+        checkoutBtn.disabled = true;
+      }
+
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="cart-empty-text">Keranjang kamu masih kosong.</p>';
+        return;
+      }
+
+      container.innerHTML = cart.map((item, index) => `
+        <div class="cart-item-row">
+          <img src="${item.img}" alt="${item.name}" class="cart-item-img" onerror="this.src='https://placehold.co/100x100/181528/fff?text=Product'" />
+          <div class="cart-item-info">
+            <div class="cart-item-title">${item.name}</div>
+            <div class="cart-item-desc">${item.desc}</div>
+            <div class="cart-item-controls">
+              <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+              <span style="font-size:13px; font-weight:600;">${item.qty}</span>
+              <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+            </div>
+          </div>
+          <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="removeItem(${index})">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(name, desc, img, btnElement) {
+      const existing = cart.find(i => i.name === name);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ name, desc, img, qty: 1 });
+      }
+      updateCartUI();
+
+      if (btnElement) {
+        const originalText = btnElement.innerHTML;
+        btnElement.classList.add('added');
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Ditambahkan';
+        setTimeout(() => {
+          btnElement.classList.remove('added');
+          btnElement.innerHTML = originalText;
+        }, 1200);
+      }
+    }
+
+    function changeQty(index, delta) {
+      cart[index].qty += delta;
+      if (cart[index].qty <= 0) {
+        cart.splice(index, 1);
+      }
+      updateCartUI();
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      updateCartUI();
+    }
+
+    function checkoutWhatsApp() {
+      if (cart.length === 0) return;
+
+      let message = "Halo Admin Corat Coret Layar 👋\n\nSaya ingin memesan custom merchandise berikut:\n";
+      cart.forEach((item, i) => {
+        message += `\n${i + 1}. *${item.name}* (x${item.qty})\n   - Note: ${item.desc}`;
+      });
+      message += "\n\nMohon info mengenai estimasi harga dan prosedur pengiriman desain. Terima kasih!";
+
+      const encoded = encodeURIComponent(message);
+      window.open(`https://wa.me/6281333385899?text=${encoded}`, '_blank');
+    }
+
+    // Cart Drawer Toggle Listeners
+    const cartOpenBtn = document.getElementById('cartOpenBtn');
+    const cartCloseBtn = document.getElementById('cartCloseBtn');
+    const cartPanel = document.getElementById('cartPanel');
+    const cartOverlay = document.getElementById('cartOverlay');
+
+    function openCart() {
+      cartPanel.classList.add('active');
+      cartOverlay.classList.add('active');
+    }
+
+    function closeCart() {
+      cartPanel.classList.remove('active');
+      cartOverlay.classList.remove('active');
+    }
+
+    cartOpenBtn.addEventListener('click', openCart);
+    cartCloseBtn.addEventListener('click', closeCart);
+    cartOverlay.addEventListener('click', closeCart);
+  </script>
+</body>
+</html>
