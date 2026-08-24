@@ -127,7 +127,6 @@
       display: block;
     }
 
-    /* Container dengan pencegah overflow di HP */
     .container {
       width: 100%;
       max-width: var(--max-width);
@@ -244,7 +243,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
@@ -256,16 +255,18 @@
     }
 
     .admin-modal-card {
-      width: min(520px, 100%);
+      width: min(520px, 95vw);
       background: var(--drawer-bg);
       border: 1px solid var(--glass-border-bright);
       border-radius: var(--radius-xl);
-      padding: 28px;
+      padding: clamp(16px, 4vw, 26px);
       box-shadow: var(--shadow-lg);
       transform: scale(0.95);
       transition: transform 0.3s ease;
       max-height: 90vh;
       overflow-y: auto;
+      overflow-x: hidden;
+      box-sizing: border-box;
     }
 
     .modal-overlay.active .admin-modal-card {
@@ -273,11 +274,114 @@
     }
 
     .admin-modal-lg {
-      width: min(800px, 100%);
+      width: min(840px, 95vw);
+    }
+
+    .admin-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .admin-modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .admin-upload-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .admin-upload-group .form-input {
+      flex: 1 1 180px;
+    }
+
+    .admin-tabs-wrapper {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-tab-btn {
+      padding: 9px 16px;
+      border-radius: var(--radius-md);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .admin-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .admin-table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      margin-top: 14px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-product-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .admin-product-table th, .admin-product-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--glass-border);
+      vertical-align: middle;
+    }
+
+    .admin-product-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--glass-bg);
+    }
+
+    .admin-p-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
     }
 
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       text-align: left;
     }
 
@@ -304,49 +408,6 @@
 
     .form-input:focus {
       border-color: var(--accent-gold);
-    }
-
-    .admin-tab-btn {
-      padding: 8px 16px;
-      border-radius: var(--radius-md);
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .admin-tab-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .admin-product-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      font-size: 13px;
-    }
-
-    .admin-product-table th, .admin-product-table td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    .admin-product-table th {
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .admin-p-img {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      object-fit: cover;
     }
 
     .header {
@@ -563,7 +624,6 @@
       pointer-events: none;
     }
 
-    /* Penyesuaian Logo agar di Desktop Tetap Besar & di HP Pas Bebas Meluber */
     .hero-logo-img {
       position: relative;
       z-index: 1;
@@ -743,7 +803,6 @@
       color: #FFFFFF !important;
     }
 
-    /* Grid Langkah Order */
     .steps-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -1075,6 +1134,21 @@
       }
     }
 
+    @media (max-width: 640px) {
+      .admin-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .admin-modal-header {
+        align-items: flex-start;
+      }
+      .admin-tab-btn {
+        flex: 1 0 auto;
+        justify-content: center;
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+    }
+
     @media (max-width: 480px) {
       .container {
         padding-left: 14px;
@@ -1127,14 +1201,15 @@
 
       <!-- Desktop Action CTA & Light/Dark Theme Switcher -->
       <div class="nav-actions">
-        <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Ganti Mode Cerah/Gelap" title="Ganti Mode Theme">
-          <i class="fa-solid fa-moon" id="themeIcon"></i>
-        </button>
-
-        <button class="btn btn-ghost btn-admin-nav" id="adminNavBtn" onclick="openAdminModal()" title="Login Admin / Owner">
-          <i class="fa-solid fa-user-shield" style="color: var(--accent-gold);"></i>
-          <span id="adminNavText">Admin</span>
-        </button>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <button class="btn btn-ghost btn-admin-nav" id="adminNavBtn" onclick="openAdminModal()" title="Login Admin">
+            <i class="fa-solid fa-user-shield" style="color: var(--accent-gold);"></i>
+            <span id="adminNavText">Admin</span>
+          </button>
+          <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Ganti Mode Cerah/Gelap" title="Ganti Mode Theme" style="width: 32px; height: 32px; font-size: 13px; margin-top: 0;">
+            <i class="fa-solid fa-moon" id="themeIcon"></i>
+          </button>
+        </div>
 
         <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-primary">
           <i class="fa-brands fa-whatsapp"></i> Hubungi Kami
@@ -1180,20 +1255,22 @@
         </li>
         <li>
           <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMobileMenu(); openAdminModal();">
-            <span>Admin / Owner Panel</span>
+            <span>Admin</span>
             <i class="fa-solid fa-user-shield" style="color:var(--accent-gold);"></i>
           </a>
+        </li>
+        <li style="padding: 10px 14px; background: var(--glass-bg); border-radius: var(--radius-md); margin-top: 6px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size:13.5px; font-weight:600; color:var(--text-muted);">Mode Tampilan</span>
+            <button class="theme-toggle-btn" id="mobileThemeToggleBtn" aria-label="Ganti Mode Theme" style="margin-top:0; width:36px; height:36px; font-size:15px;">
+              <i class="fa-solid fa-moon" id="mobileThemeIcon"></i>
+            </button>
+          </div>
         </li>
       </ul>
     </div>
 
     <div style="border-top: 1px solid var(--glass-border); padding-top: 20px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-        <span style="font-size:14px; font-weight:600;">Mode Tampilan</span>
-        <button class="theme-toggle-btn" id="mobileThemeToggleBtn" aria-label="Ganti Mode Theme">
-          <i class="fa-solid fa-moon" id="mobileThemeIcon"></i>
-        </button>
-      </div>
       <a href="https://wa.me/6281333385899" target="_blank" class="btn btn-gold" style="width: 100%;">
         <i class="fa-brands fa-whatsapp"></i> Chat WhatsApp Admin
       </a>
@@ -1217,7 +1294,7 @@
         <div style="display: flex; justify-content: center;">
           <div class="typing-badge glass-box">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Kita Siap Buat: <strong id="typingText" style="color:var(--accent-gold);">Custom T-Shirt</strong></span>
+            <span>Kita Siap Buat: <strong id="typingText" style="color:var(--accent-gold);">Custom Design T-Shirt</strong></span>
           </div>
         </div>
 
@@ -1227,7 +1304,7 @@
         </h1>
 
         <p class="hero-subtitle">
-          Bikin Design Kaos, Hoodie, Sticker, Flag, Tote Bag, dan Jersey sesuai imajinasi kamu. Hasil rapi, detail presisi, dan pengerjaan cepat.
+          Bikin Custom Design Kaos, Hoodie, Sticker, Flag, Tote Bag, dan Jersey sesuai imajinasi kamu. Hasil rapi, detail presisi, dan pengerjaan cepat.
         </p>
 
         <div class="hero-actions">
@@ -1253,8 +1330,8 @@
             <div style="width:44px; height:44px; border-radius:12px; background:rgba(225,29,42,0.12); display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:18px; margin-bottom:14px;">
               <i class="fa-solid fa-crown"></i>
             </div>
-            <h3 style="font-size:17px; font-weight:700; margin-bottom:6px;">Bahan Premium</h3>
-            <p style="font-size:13px; color:var(--text-muted);">Material kain, sablon, dan cetakan stiker kelas industri dengan standar kerapian tinggi.</p>
+            <h3 style="font-size:17px; font-weight:700; margin-bottom:6px;">Design Premium</h3>
+            <p style="font-size:13px; color:var(--text-muted);">Design premium dengan standar kerapian tinggi.</p>
           </div>
 
           <div class="glass-box" style="padding: 24px 20px;">
@@ -1320,7 +1397,7 @@
           <div class="step-card glass-box">
             <div class="step-number">4</div>
             <h3>Proses Produksi</h3>
-            <p>Merchandise dicetak dengan teliti sesuai standar standar terbaik.</p>
+            <p>Design akan diproses dengan teliti sesuai kemauan pelanggan</p>
           </div>
 
           <div class="step-card glass-box">
@@ -1373,6 +1450,7 @@
     </div>
   </footer>
 
+  <!-- Floating action buttons -->
   <div class="floating-container">
     <button class="float-btn float-btn-cart" id="openCartBtn" aria-label="Buka Keranjang">
       <i class="fa-solid fa-cart-shopping"></i>
@@ -1404,12 +1482,11 @@
     </div>
   </aside>
 
-  <!-- Admin Login Modal -->
   <div class="modal-overlay" id="adminLoginModal">
     <div class="admin-modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="font-size:18px; font-weight:700;"><i class="fa-solid fa-lock" style="color:var(--primary); margin-right:8px;"></i> Login Admin / Owner</h3>
-        <button onclick="closeAdminModal()" style="background:transparent; color:var(--text-muted); font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+        <h3 style="font-size:18px; font-weight:700;"><i class="fa-solid fa-lock" style="color:var(--primary); margin-right:8px;"></i> Login Admin</h3>
+        <button onclick="closeAdminModal()" style="background:transparent; color:var(--text-muted); font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div id="loginAlert" style="display:none; padding:10px 14px; background:rgba(225,29,42,0.18); border:1px solid var(--primary); border-radius:var(--radius-md); font-size:13px; color:#ff8b94; margin-bottom:16px;"></div>
@@ -1430,24 +1507,25 @@
     </div>
   </div>
 
-  <!-- Admin Dashboard Modal -->
   <div class="modal-overlay" id="adminDashboardModal">
     <div class="admin-modal-card admin-modal-lg">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--glass-border); padding-bottom:14px;">
+      
+      <!-- Responsive Admin Header -->
+      <div class="admin-modal-header">
         <div>
-          <h3 style="font-size:19px; font-weight:700;" id="dashboardGreeting">Dashboard Admin</h3>
-          <span style="font-size:12px; color:var(--text-muted);" id="userRoleBadge">Role: Owner</span>
+          <h3 style="font-size:18px; font-weight:700;" id="dashboardGreeting">Dashboard Admin</h3>
+          <span style="font-size:12px; color:var(--text-muted);" id="userRoleBadge">Role: Admin</span>
         </div>
-        <div style="display:flex; gap:10px;">
+        <div class="admin-modal-header-actions">
           <button class="btn btn-ghost" style="padding:6px 14px; font-size:12px;" onclick="handleAdminLogout()">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
           </button>
-          <button onclick="closeAdminDashboard()" style="background:transparent; color:var(--text-muted); font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
+          <button onclick="closeAdminDashboard()" style="background:transparent; color:var(--text-muted); font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <!-- Scrollable Navigation Tabs on Mobile -->
+      <div class="admin-tabs-wrapper">
         <button class="admin-tab-btn active" id="tabProductBtn" onclick="switchAdminTab('products')">
           <i class="fa-solid fa-box-open"></i> Kelola Foto &amp; Produk
         </button>
@@ -1462,14 +1540,15 @@
           <h4 style="font-size:15px; font-weight:700; margin-bottom:12px;" id="productFormTitle">Tambah / Edit Produk Baru</h4>
           <input type="hidden" id="editProductId" value="" />
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <!-- Form grid collapses to 1 column on mobile -->
+          <div class="admin-form-grid">
             <div class="form-group">
               <label>Nama Produk</label>
-              <input type="text" id="pName" class="form-input" placeholder="cth: Custom Hoodie" required />
+              <input type="text" id="pName" class="form-input" placeholder="cth: Custom Design Hoodie" required />
             </div>
             <div class="form-group">
               <label>Bahan / Kategori Material</label>
-              <input type="text" id="pDesc" class="form-input" placeholder="cth: Fleece Premium Custom" required />
+              <input type="text" id="pDesc" class="form-input" placeholder="cth: Fleece Premium Custom Design" required />
             </div>
           </div>
 
@@ -1480,10 +1559,10 @@
 
           <div class="form-group">
             <label>Foto Produk (URL Gambar atau Upload)</label>
-            <div style="display:flex; gap:10px;">
+            <div class="admin-upload-group">
               <input type="text" id="pImgUrl" class="form-input" placeholder="https://... atau upload foto" />
               <input type="file" id="pImgFile" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
-              <button type="button" class="btn btn-ghost" onclick="document.getElementById('pImgFile').click()" style="padding:10px 14px; font-size:12px; white-space:nowrap;">
+              <button type="button" class="btn btn-ghost" onclick="document.getElementById('pImgFile').click()" style="padding:10px 14px; font-size:12px; white-space:nowrap; flex-shrink:0;">
                 <i class="fa-solid fa-upload"></i> Upload Foto
               </button>
             </div>
@@ -1492,7 +1571,7 @@
             </div>
           </div>
 
-          <div style="display:flex; gap:10px; margin-top:14px;">
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
             <button type="button" class="btn btn-primary" onclick="saveProduct()">
               <i class="fa-solid fa-floppy-disk"></i> Simpan Produk
             </button>
@@ -1503,7 +1582,9 @@
         </div>
 
         <h4 style="font-size:15px; font-weight:700; text-align:left;">Daftar Produk Aktif</h4>
-        <div style="overflow-x:auto;">
+        
+        <!-- Table Scroll Container preventing page overflow -->
+        <div class="admin-table-container">
           <table class="admin-product-table">
             <thead>
               <tr>
@@ -1525,7 +1606,7 @@
         <div class="glass-box" style="padding:16px; margin-bottom:20px; text-align:left;">
           <h4 style="font-size:15px; font-weight:700; margin-bottom:12px;">Buatkan Akun Admin Baru</h4>
           
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="admin-form-grid">
             <div class="form-group">
               <label>Username Admin Baru</label>
               <input type="text" id="newAdminUser" class="form-input" placeholder="cth: admin2" />
@@ -1542,7 +1623,9 @@
         </div>
 
         <h4 style="font-size:15px; font-weight:700; text-align:left;">Daftar Akun Terdaftar</h4>
-        <div style="overflow-x:auto;">
+        
+        <!-- Table Scroll Container preventing page overflow -->
+        <div class="admin-table-container">
           <table class="admin-product-table">
             <thead>
               <tr>
@@ -1557,6 +1640,7 @@
           </table>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -1564,13 +1648,13 @@
     document.getElementById('year').textContent = new Date().getFullYear();
 
     const DEFAULT_PRODUCTS = [
-      { id: 'p1', name: 'Custom T-Shirt', desc: 'Cotton Combed Premium', subDesc: 'Cotton combed berkualitas dengan sablon tajam & lembut.', img: 'assets/gambar/t-shirt.png' },
-      { id: 'p2', name: 'Custom Hoodie', desc: 'Fleece Premium Custom', subDesc: 'Bahan tebal hangat dengan hasil print detail & awet.', img: 'assets/gambar/hoodie.png' },
-      { id: 'p3', name: 'Custom Flag', desc: 'Bahan Kain Satin/Satinet', subDesc: 'Bendera komunitas / event dengan warna tajam anti pudar.', img: 'assets/gambar/flag.png' },
-      { id: 'p4', name: 'Custom Sticker', desc: 'Stiker Vinyl Waterproof', subDesc: 'Vinyl waterproof, die-cut/kiss-cut siap tempel.', img: 'assets/gambar/sticker.png' },
-      { id: 'p5', name: 'Custom Tote Bag', desc: 'Kanvas Premium Custom', subDesc: 'Kanvas tebal kuat untuk kebutuhan harian & hobi.', img: 'assets/gambar/totebag.png' },
-      { id: 'p6', name: 'Custom Jersey', desc: 'Dryfit Sublimation', subDesc: 'Sublimasi full print untuk tim olahraga atau esport.', img: 'assets/gambar/jersey.png' },
-      { id: 'p7', name: 'Custom Design Lainnya', desc: 'Request Khusus Customer', subDesc: 'Punya ide unik lain? Konsultasikan langsung dengan kami.', img: 'assets/gambar/lainyya.png' }
+      { id: 'p1', name: 'Custom Design T-Shirt', desc: 'Cotton Combed Premium Custom Design', subDesc: 'Cotton combed berkualitas dengan sablon tajam & lembut.', img: 'assets/gambar/t-shirt.png' },
+      { id: 'p2', name: 'Custom Design Hoodie', desc: 'Fleece Premium Custom Design', subDesc: 'Bahan tebal hangat dengan hasil print detail & awet.', img: 'assets/gambar/hoodie.png' },
+      { id: 'p3', name: 'Custom Design Flag', desc: 'Bahan Kain Satin/Satinet Custom Design', subDesc: 'Bendera komunitas / event dengan warna tajam anti pudar.', img: 'assets/gambar/flag.png' },
+      { id: 'p4', name: 'Custom Design Sticker', desc: 'Stiker Vinyl Waterproof Custom Design', subDesc: 'Vinyl waterproof, die-cut/kiss-cut siap tempel.', img: 'assets/gambar/sticker.png' },
+      { id: 'p5', name: 'Custom Design Tote Bag', desc: 'Kanvas Premium Custom Design', subDesc: 'Kanvas tebal kuat untuk kebutuhan harian & hobi.', img: 'assets/gambar/totebag.png' },
+      { id: 'p6', name: 'Custom Design Jersey', desc: 'Dryfit Sublimation Custom Design', subDesc: 'Sublimasi full print untuk tim olahraga atau esport.', img: 'assets/gambar/jersey.png' },
+      { id: 'p7', name: 'Custom Design Lainnya', desc: 'Request Khusus Custom Design Customer', subDesc: 'Punya ide unik lain? Konsultasikan langsung dengan kami.', img: 'assets/gambar/lainyya.png' }
     ];
 
     const DEFAULT_ACCOUNTS = [
@@ -1686,7 +1770,7 @@
 
     function openAdminDashboard() {
       if (!activeUserSession) return;
-      document.getElementById('dashboardGreeting').textContent = `Dashboard ${activeUserSession.role}: ${activeUserSession.username}`;
+      document.getElementById('dashboardGreeting').textContent = `Dashboard Admin: ${activeUserSession.username}`;
       document.getElementById('userRoleBadge').textContent = `Role Hak Akses: ${activeUserSession.role}`;
       document.getElementById('adminDashboardModal').classList.add('active');
       
@@ -1814,11 +1898,11 @@
           <td><img src="${p.img}" class="admin-p-img" onerror="this.src='https://placehold.co/100x100/181528/fff?text=IMG'" /></td>
           <td style="font-weight:600;">${p.name}</td>
           <td style="color:var(--text-muted);">${p.desc}</td>
-          <td>
-            <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick="editProduct('${p.id}')">
+          <td style="white-space:nowrap;">
+            <button class="btn btn-ghost" style="padding:5px 10px; font-size:11px; margin-right:4px;" onclick="editProduct('${p.id}')">
               <i class="fa-solid fa-pen"></i> Edit
             </button>
-            <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:#ff8b94; border-color:rgba(225,29,42,0.3);" onclick="deleteProduct('${p.id}')">
+            <button class="btn btn-ghost" style="padding:5px 10px; font-size:11px; color:#ff8b94; border-color:rgba(225,29,42,0.3);" onclick="deleteProduct('${p.id}')">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>
@@ -1874,8 +1958,8 @@
         tr.innerHTML = `
           <td style="font-weight:600;">${a.username}</td>
           <td><span style="padding:2px 8px; border-radius:10px; font-size:11px; background:${a.role === 'Owner' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.1)'}; color:${a.role === 'Owner' ? 'var(--accent-gold)' : 'var(--text-main)'}">${a.role}</span></td>
-          <td>
-            ${a.role !== 'Owner' ? `<button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:#ff8b94;" onclick="deleteAdminAccount('${a.username}')"><i class="fa-solid fa-user-minus"></i> Hapus</button>` : '<span style="font-size:11px; color:var(--text-muted);">Protected</span>'}
+          <td style="white-space:nowrap;">
+            ${a.role !== 'Owner' ? `<button class="btn btn-ghost" style="padding:5px 10px; font-size:11px; color:#ff8b94;" onclick="deleteAdminAccount('${a.username}')"><i class="fa-solid fa-user-minus"></i> Hapus</button>` : '<span style="font-size:11px; color:var(--text-muted);">Protected</span>'}
           </td>
         `;
         tbody.appendChild(tr);
@@ -1953,7 +2037,7 @@
 
     // 4. Typing Effect Logic
     const typingText = document.getElementById('typingText');
-    const words = ['Custom T-Shirt', 'Custom Hoodie', 'Custom Flag', 'Custom Sticker', 'Custom Tote Bag', 'Custom Jersey'];
+    const words = ['Custom Design T-Shirt', 'Custom Design Hoodie', 'Custom Design Flag', 'Custom Design Sticker', 'Custom Design Tote Bag', 'Custom Design Jersey'];
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
