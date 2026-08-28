@@ -4,7 +4,7 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 // Smooth scroll (CSS already, but keep navbar behavior nice)
-$$('a[href^="#"]').forEach(a => {
+$$('a[href^="#"]').forEach((a) => {
   a.addEventListener('click', (e) => {
     const href = a.getAttribute('href');
     if (!href || href === '#') return;
@@ -21,14 +21,14 @@ $$('a[href^="#"]').forEach(a => {
   const header = $('#site-header');
   const links = $$('[data-nav]');
   const sections = links
-    .map(l => document.querySelector(l.getAttribute('href') || l.getAttribute('data-nav')))
+    .map((l) => document.querySelector(l.getAttribute('href') || l.getAttribute('data-nav')))
     .filter(Boolean);
 
   const setActive = () => {
     let bestId = '#home';
     let bestTop = -Infinity;
 
-    sections.forEach(sec => {
+    sections.forEach((sec) => {
       const rect = sec.getBoundingClientRect();
       // consider when section top is near the header
       const top = -rect.top;
@@ -38,7 +38,7 @@ $$('a[href^="#"]').forEach(a => {
       }
     });
 
-    links.forEach(l => {
+    links.forEach((l) => {
       const href = l.getAttribute('href');
       l.classList.toggle('is-active', href === bestId);
     });
@@ -75,7 +75,7 @@ $$('a[href^="#"]').forEach(a => {
     isOpen ? close() : open();
   });
 
-  $$('#mobile-menu [data-mobile-nav]').forEach(a => {
+  $$('#mobile-menu [data-mobile-nav]').forEach((a) => {
     a.addEventListener('click', close);
   });
 
@@ -88,7 +88,7 @@ $$('a[href^="#"]').forEach(a => {
 
 // Ripple effect
 (function initRipple() {
-  $$('[data-ripple]').forEach(btn => {
+  $$('[data-ripple]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       const rect = btn.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -133,7 +133,10 @@ $$('a[href^="#"]').forEach(a => {
 (function initTyping() {
   const el = document.querySelector('[data-typing]');
   if (!el) return;
-  const words = (el.getAttribute('data-typing') || '').split(',').map(s => s.trim()).filter(Boolean);
+  const words = (el.getAttribute('data-typing') || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   let i = 0;
   let cur = '';
@@ -174,16 +177,19 @@ $$('a[href^="#"]').forEach(a => {
   const nodes = $$('.reveal-up, .reveal-left, .reveal-right');
   if (!nodes.length) return;
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('reveal-show');
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.18 });
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('reveal-show');
+          io.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.18 },
+  );
 
-  nodes.forEach(n => io.observe(n));
+  nodes.forEach((n) => io.observe(n));
 })();
 
 // FAQ accordion
@@ -191,7 +197,7 @@ $$('a[href^="#"]').forEach(a => {
   const acc = $('#faqAccordion');
   if (!acc) return;
 
-  $$('.acc-item', acc).forEach(item => {
+  $$('.acc-item', acc).forEach((item) => {
     const btn = $('.acc-trigger', item);
     const panel = $('.acc-panel', item);
     if (!btn || !panel) return;
@@ -200,8 +206,8 @@ $$('a[href^="#"]').forEach(a => {
       const isOpen = btn.getAttribute('aria-expanded') === 'true';
 
       // close others
-      $$('.acc-trigger', acc).forEach(b => b.setAttribute('aria-expanded', 'false'));
-      $$('.acc-panel', acc).forEach(p => p.hidden = true);
+      $$('.acc-trigger', acc).forEach((b) => b.setAttribute('aria-expanded', 'false'));
+      $$('.acc-panel', acc).forEach((p) => (p.hidden = true));
 
       if (!isOpen) {
         btn.setAttribute('aria-expanded', 'true');
@@ -231,16 +237,19 @@ $$('a[href^="#"]').forEach(a => {
     requestAnimationFrame(step);
   };
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        animate(e.target);
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.35 });
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          animate(e.target);
+          io.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.35 },
+  );
 
-  nodes.forEach(n => io.observe(n));
+  nodes.forEach((n) => io.observe(n));
 })();
 
 // ============================================================
@@ -294,7 +303,7 @@ $$('a[href^="#"]').forEach(a => {
       cartCount.textContent = `${totalItems} produk`;
     }
 
-    cart.forEach(item => {
+    cart.forEach((item) => {
       const row = document.createElement('div');
       row.className = 'cart-item';
       row.innerHTML = `
@@ -333,7 +342,7 @@ $$('a[href^="#"]').forEach(a => {
       });
 
       $('[data-action="remove"]', row).addEventListener('click', () => {
-        cart = cart.filter(i => i.id !== item.id);
+        cart = cart.filter((i) => i.id !== item.id);
         renderAll();
       });
 
@@ -344,7 +353,7 @@ $$('a[href^="#"]').forEach(a => {
   };
 
   const updateCheckoutState = () => {
-    const anyChecked = cart.some(i => i.checked);
+    const anyChecked = cart.some((i) => i.checked);
     cartCheckout.disabled = !anyChecked;
   };
 
@@ -368,7 +377,7 @@ $$('a[href^="#"]').forEach(a => {
   };
 
   const addToCart = (name, desc, img, btn) => {
-    const existing = cart.find(i => i.name === name);
+    const existing = cart.find((i) => i.name === name);
     if (existing) {
       existing.qty += 1;
     } else {
@@ -387,7 +396,7 @@ $$('a[href^="#"]').forEach(a => {
     }
   };
 
-  addButtons.forEach(btn => {
+  addButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const name = btn.getAttribute('data-name') || 'Produk';
       const desc = btn.getAttribute('data-desc') || '';
@@ -401,10 +410,48 @@ $$('a[href^="#"]').forEach(a => {
   cartOverlay.addEventListener('click', closeCart);
 
   cartCheckout.addEventListener('click', () => {
-    const chosen = cart.filter(i => i.checked);
+    const chosen = cart.filter((i) => i.checked);
     if (!chosen.length) return;
 
-    const lines = chosen.map(i => `☑ ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''} - ${i.desc}`);
+    // 1. Buat data objek pesanan/transaksi baru
+    const totalItemCount = chosen.reduce((sum, item) => sum + item.qty, 0);
+    const productListText = chosen.map((item) => `${item.name} (${item.qty}x)`).join(', ');
+
+    // Estimasi total nominal (misal Rp 100.000 per pcs, sesuaikan jika ada harga pasti)
+    const estimatedTotal = totalItemCount * 100000;
+    const newOrder = {
+      id: 'INV-' + Date.now(),
+      customer: 'Pelanggan WhatsApp',
+      product: productListText,
+      qty: totalItemCount,
+      total: estimatedTotal,
+      payment_method: 'WhatsApp Order',
+      status: 'Completed',
+      date: new Date().toISOString(),
+    };
+
+    // 2. SIMPAN DATA KE LOCALSTORAGE DIBAGI DENGAN DASHBOARD
+    const localSales = JSON.parse(localStorage.getItem('ccl_local_sales') || '[]');
+    localSales.unshift(newOrder);
+    localStorage.setItem('ccl_local_sales', JSON.stringify(localSales));
+
+    // 3. KIRIM SINYAL BROADCAST INSTAN KE DASHBOARD (JIKA DIBUKA DI BROWSER SAMA)
+    try {
+      const channel = new BroadcastChannel('ccl_sales_channel');
+      channel.postMessage({ type: 'NEW_SALE', data: newOrder });
+    } catch (e) {
+      console.log('BroadcastChannel tidak didukung browser ini');
+    }
+
+    // 4. OPTIONAL: KIRIM KE BACKEND VERCEL API (JIKA SERVER BACKEND AKTIF)
+    fetch('https://coratcoretlayar.vercel.app/api/v1/sales', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.log('API Offline, menggunakan Local Storage'));
+
+    // 5. PROSES BUKA WHATSAPP SEPERTI BIASA
+    const lines = chosen.map((i) => `☑ ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''} - ${i.desc}`);
 
     const message =
       `Halo Admin Corat Coret Layar 👋\n\n` +
