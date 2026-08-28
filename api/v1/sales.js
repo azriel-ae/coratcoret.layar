@@ -37,7 +37,11 @@ async function readSales() {
   if (!existing) return [];
 
   try {
-    const res = await fetch(existing.url, { cache: 'no-store' });
+    // Cache-busting: tambahkan query unik supaya CDN Vercel Blob tidak pernah
+    // mengembalikan versi lama yang ter-cache (Vercel Blob CDN cache bisa
+    // menyimpan konten lama sampai beberapa saat meski sudah di-overwrite).
+    const bustUrl = `${existing.url}?_t=${Date.now()}`;
+    const res = await fetch(bustUrl, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
@@ -53,6 +57,7 @@ async function writeSales(sales) {
     contentType: 'application/json',
     addRandomSuffix: false, // supaya nama file & URL tetap sama setiap update
     allowOverwrite: true, // wajib true karena kita menimpa file yang sama tiap kali
+    cacheControlMaxAge: 60, // minimum yang diizinkan Vercel, perkecil jendela cache basi
   });
 }
 
