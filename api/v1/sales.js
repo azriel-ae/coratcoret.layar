@@ -19,6 +19,11 @@ function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Pastikan browser/CDN/proxy TIDAK pernah cache respons endpoint ini,
+  // supaya data penjualan selalu real-time dan tidak ketinggalan (mencegah 304 palsu).
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 }
 
 // Cari URL blob sales-data.json yang sudah ada (kalau ada)
