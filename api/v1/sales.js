@@ -73,12 +73,20 @@ module.exports = async function handler(req, res) {
     try {
       const order = req.body;
 
-      if (!order || typeof order !== 'object' || !order.id) {
+      if (!order || typeof order !== 'object') {
         return res.status(400).json({ success: false, error: 'Data pesanan tidak valid' });
       }
 
+      // "id" TIDAK wajib dikirim dari website checkout — kalau kosong,
+      // server yang membuatkan ID unik sendiri. Ini penting karena banyak
+      // kode checkout (termasuk contoh payload di dashboard) tidak
+      // menyertakan id sama sekali; sebelumnya request seperti ini malah
+      // ditolak (400) sehingga transaksi asli tidak pernah tersimpan.
+      const generatedId = 'TX-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+
       const record = {
-        id: order.id,
+        id: order.id || generatedId,
+        invoice: order.invoice || order.id || generatedId,
         customer: order.customer || 'Pelanggan WhatsApp',
         product: order.product || '',
         qty: Number(order.qty) || 0,

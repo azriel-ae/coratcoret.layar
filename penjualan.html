@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Rekap Penjualan - Corat Coret Layar</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+  <div id="app" class="min-h-screen flex flex-col"></div>
+
+  <script>
+    // Storage Keys Configuration
+    const STORAGE_KEYS = {
+      API_URL: 'ccl_api_base_url',
+      USERS: 'ccl_admin_users',
+      SESSION: 'ccl_current_session',
+      ACTIVITY: 'ccl_activity_logs',
+      LOCAL_SALES: 'ccl_local_sales',
+      PRODUCTS: 'ccl_products_cache'
+    };
+
+    // Default Configuration
+    // Karena dashboard ini sekarang di-deploy di domain yang SAMA dengan backend
+    // (satu project Vercel, diakses lewat /penjualan), kita pakai path RELATIF
+    // '/api' sebagai default. Ini otomatis mengikuti domain apapun yang dipakai
+    // (production, custom domain, maupun preview deployment Vercel) tanpa perlu
+    // diubah manual, dan tidak ada masalah CORS karena same-origin.
+    const DEFAULT_API_URL = '/api';
+
+    // Helper Utility: Formatting Rupiah Currency
+    function formatIDR(amount) {
+      const numericVal = Number(amount) || 0;
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0
+      }).format(numericVal);
+    }
+
+    // Helper Utility: Formatting Date
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return new Intl.DateTimeFormat('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(date);
+      } catch (e) {
+        return '-';
+      }
+    }
+
+    // Helper Utility: Render Status Badges safely
+    function renderStatusBadge(status) {
+      const s = (status || 'Completed').toString().toLowerCase();
+      if (s.includes('completed') || s.includes('lunas') || s.includes('sukses')) {
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500"></span> Completed
+                </span>`;
+      } else if (s.includes('pending') || s.includes('proses') || s.includes('menunggu')) {
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span> Pending
+                </span>`;
+      } else {
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500"></span> Cancelled
+                </span>`;
+      }
+    }
+
+    // AuthService Module
+    const AuthService = {
+      getSession() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSION) || 'null');
+        } catch (e) {
+          return null;
+        }
+      },
+
+      setSession(session) {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+      },
+
+      clearSession() {
+        localStorage.removeItem(STORAGE_KEYS.SESSION);
+      },
+
+      getUsers() {
+        try {
+          const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+          if (users.length === 0) {
+            // Default user fallback hidden from UI
+            const defaultUser = { username: 'admin', role: 'Owner', createdAt: new Date().toISOString() };
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([defaultUser]));
+            return [defaultUser];
+          }
+          return users;
+        } catch (e) {
+          return [{ username: 'admin', role: 'Owner', createdAt: new Date().toISOString() }];
+        }
+      },
+
+      login(username, password) {
+        // Validasi credential (admin / 123)
+        const cleanUser = (username || '').trim().toLowerCase();
+        if (cleanUser === 'admin' && password === '123') {
+          const session = {
+            username: 'admin',
+            name: 'Administrator CCL',
+            role: 'Owner',
+            loginAt: new Date().toISOString()
+          };
+          this.setSession(session);
+          this.logActivity('admin', 'Berhasil masuk ke sistem dashboard');
+          return { success: true };
+        }
+        return { success: false, message: 'Username atau Password salah!' };
+      },
+
+      logout() {
+        const current = this.getSession();
+        if (current) {
+          this.logActivity(current.username, 'Keluar dari sistem dashboard');
+        }
+        this.clearSession();
+        AppState.render();
+      },
+
+      logActivity(username, action) {
+        try {
+          const logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY) || '[]');
+          logs.unshift({
+            id: 'LOG-' + Date.now(),
+            username,
+            action,
+            timestamp: new Date().toISOString()
+          });
+          // Limit 100 logs
+          localStorage.setItem(STORAGE_KEYS.ACTIVITY, JSON.stringify(logs.slice(0, 100)));
+        } catch (e) {
+          console.error('Error logging activity:', e);
+        }
+      },
+
+      getActivityLogs() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY) || '[]');
+        } catch (e) {
+          return [];
+        }
+      }
+    };
+
+    const ApiService = {
+      getApiUrl() {
+        return localStorage.getItem(STORAGE_KEYS.API_URL) || DEFAULT_API_URL;
+      },
+
+      setApiUrl(url) {
+        localStorage.setItem(STORAGE_KEYS.API_URL, url);
+      },
+
+      async fetchSalesData() {
+        try {
+          const baseUrl = this.getApiUrl();
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+          // Cache-busting: tambahkan query unik + no-store supaya browser/CDN
+          // tidak pernah menampilkan data lama saat ada checkout baru masuk.
+          const res = await fetch(`${baseUrl}/v1/sales?_t=${Date.now()}`, {
+            signal: controller.signal,
+            cache: 'no-store'
+          });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            const apiSales = Array.isArray(data) ? data : (data?.data || data?.sales || []);
+
+            // Data dari server (hasil checkout asli) adalah SUMBER UTAMA.
+            AppState.apiConnectionStatus = {
+              success: true,
+              message: `Terhubung ke API Server — ${apiSales.length} transaksi asli ditemukan`
+            };
+            return apiSales;
+          }
+          throw new Error(`HTTP ${res.status}: ${res.statusText || 'Gagal memuat API'}`);
+        } catch (error) {
+          // Server tidak bisa dihubungi: fallback ke cache lokal terakhir yang
+          // pernah berhasil diambil dari server (BUKAN transaksi karangan),
+          // supaya dashboard tidak kosong total saat koneksi terputus sesaat.
+          const cachedSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_SALES) || '[]');
+          AppState.apiConnectionStatus = {
+            success: false,
+            message: `Gagal terhubung ke server (${error.message || 'Server API belum merespons'}) — menampilkan cache terakhir`
+          };
+          return cachedSales;
+        }
+      },
+
+      async fetchProducts() {
+        try {
+          const baseUrl = this.getApiUrl();
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+          const res = await fetch(`${baseUrl}/v1/products`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data?.products || data?.data || []);
+          }
+          throw new Error('API Error');
+        } catch (error) {
+          // Default Katalog Produk Corat Coret Layar
+          return [
+            { id: 'PRD-01', name: 'Desain Banner & Spanduk High-Res', category: 'Desain Grafis', price: 150000 },
+            { id: 'PRD-02', name: 'Paket Brand Identity & Logo', category: 'Branding', price: 750000 },
+            { id: 'PRD-03', name: 'Cetak Spanduk Fleksi 280g (per m²)', category: 'Percetakan', price: 25000 },
+            { id: 'PRD-04', name: 'Cetak Stiker Vinyl A3+ Cut', category: 'Percetakan', price: 15000 },
+            { id: 'PRD-05', name: 'Brosur & Flyer A4 Full Color (100 lembar)', category: 'Percetakan', price: 120000 }
+          ];
+        }
+      }
+    };
+
+    const AppState = {
+      activeTab: 'dashboard',
+      salesRaw: [],
+      productsRaw: [],
+      loading: false,
+      apiError: null,
+      lastUpdated: null,
+      apiConnectionStatus: { success: false, message: 'Belum dicek' },
+      // Auto-Sync aktif secara default supaya transaksi checkout asli dari
+      // website utama langsung muncul di sini tanpa perlu klik apa pun.
+      autoSyncEnabled: true,
+      autoSyncTimer: null,
+
+      // Notification Message Box (Modal / Toast custom)
+      toastMessage: null,
+
+      toggleAutoSync() {
+        this.autoSyncEnabled = !this.autoSyncEnabled;
+        if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
+        
+        if (this.autoSyncEnabled) {
+          this.showToast('Auto-Sync Diaktifkan (Update otomatis tiap 15 detik)');
+          this.autoSyncTimer = setInterval(() => {
+            this.loadData();
+          }, 15000);
+        } else {
+          this.showToast('Auto-Sync Dimatikan');
+        }
+        this.render();
+      },
+
+      // Transaksi Filters
+      txSearch: '',
+      txStatus: 'ALL',
+      selectedTx: null,
+
+      // Modals
+      adminModalOpen: false,
+      txModalOpen: false,
+
+      async loadData() {
+        this.loading = true;
+        this.render();
+
+        try {
+          const [sales, products] = await Promise.all([
+            ApiService.fetchSalesData(),
+            ApiService.fetchProducts()
+          ]);
+          this.salesRaw = sales || [];
+          this.productsRaw = products || [];
+          this.lastUpdated = new Date().toISOString();
+          this.apiError = null;
+
+          // Simpan hasil asli dari server sebagai cache offline (dipakai
+          // hanya kalau server sedang tidak bisa dihubungi), bukan sebagai
+          // data buatan sendiri.
+          if (this.apiConnectionStatus.success) {
+            localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(this.salesRaw));
+          }
+        } catch (err) {
+          this.apiError = 'Gagal memuat data otomatis. Menampilkan data lokal saat ini.';
+        } finally {
+          this.loading = false;
+          this.render();
+        }
+      },
+
+      showToast(msg) {
+        this.toastMessage = msg;
+        this.render();
+        setTimeout(() => {
+          this.toastMessage = null;
+          this.render();
+        }, 3500);
+      },
+
+      render() {
+        const appContainer = document.getElementById('app');
+        if (!appContainer) return;
+
+        const session = AuthService.getSession();
+
+        if (!session) {
+          appContainer.innerHTML = renderLoginScreen();
+        } else {
+          appContainer.innerHTML = renderDashboardScreen(session);
+        }
+
+        // Initialize Lucide Icons after DOM update
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }
+    };
+
+    function computeMetrics(sales) {
+      if (!Array.isArray(sales) || sales.length === 0) {
+        return {
+          totalOmzet: 0,
+          totalTxCount: 0,
+          completedCount: 0,
+          pendingCount: 0,
+          avgTxValue: 0,
+          todayOmzet: 0
+        };
+      }
+
+      const nowStr = new Date().toISOString().slice(0, 10);
+
+      let totalOmzet = 0;
+      let totalTxCount = sales.length;
+      let completedCount = 0;
+      let pendingCount = 0;
+      let todayOmzet = 0;
+
+      sales.forEach(tx => {
+        const amount = Number(tx.total || tx.amount || tx.price || 0);
+        const status = (tx.status || 'Completed').toLowerCase();
+        const dateStr = (tx.date || tx.created_at || '').slice(0, 10);
+
+        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses')) {
+          totalOmzet += amount;
+          completedCount++;
+          if (dateStr === nowStr) {
+            todayOmzet += amount;
+          }
+        } else if (status.includes('pending') || status.includes('proses')) {
+          pendingCount++;
+        }
+      });
+
+      const avgTxValue = completedCount > 0 ? totalOmzet / completedCount : 0;
+
+      return {
+        totalOmzet,
+        totalTxCount,
+        completedCount,
+        pendingCount,
+        avgTxValue,
+        todayOmzet
+      };
+    }
+
+    function renderLoginScreen() {
+      return `
+        <div class="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+          <!-- Background Decorative Elements -->
+          <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="max-w-md w-full bg-white/95 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-slate-100 z-10 space-y-6">
+            <div class="text-center space-y-2">
+              <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <i data-lucide="layers" class="w-8 h-8"></i>
+              </div>
+              <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Corat Coret Layar</h1>
+              <p class="text-xs text-slate-500">Dashboard Rekapitulasi & Analytics Penjualan</p>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+              <div id="login-error" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+                <span id="login-error-text">Username atau Password salah!</span>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">Username</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    id="input-username" 
+                    placeholder="Masukkan username" 
+                    required 
+                    autocomplete="username"
+                    class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">Password</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="password" 
+                    id="input-password" 
+                    placeholder="Masukkan password" 
+                    required 
+                    autocomplete="current-password"
+                    class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-600/30 transition flex items-center justify-center space-x-2"
+              >
+                <span>Masuk Ke Dashboard</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </form>
+
+            <div class="pt-2 text-center border-t border-slate-100">
+              <p class="text-[11px] text-slate-400">Corat Coret Layar &copy; 2026. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('input-username').value;
+      const password = document.getElementById('input-password').value;
+
+      const res = AuthService.login(username, password);
+      if (res.success) {
+        AppState.loadData();
+      } else {
+        const errBox = document.getElementById('login-error');
+        const errText = document.getElementById('login-error-text');
+        if (errBox && errText) {
+          errText.textContent = res.message;
+          errBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function renderDashboardScreen(session) {
+      const metrics = computeMetrics(AppState.salesRaw);
+
+      return `
+        <div class="flex-1 flex flex-col md:flex-row min-h-screen">
+          <!-- Sidebar Navigasi Desktop & Mobile Header -->
+          <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800">
+            <div>
+              <!-- Logo Header -->
+              <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h1 class="font-bold text-white text-sm leading-tight">Corat Coret Layar</h1>
+                    <p class="text-[10px] text-slate-400">Rekap Penjualan</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Nav Menu Items -->
+              <nav class="p-3 space-y-1 text-xs font-semibold">
+                <button 
+                  onclick="AppState.activeTab='dashboard'; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition ${AppState.activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}"
+                >
+                  <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                  <span>Ringkasan Dashboard</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='transactions'; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition ${AppState.activeTab === 'transactions' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}"
+                >
+                  <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                  <span>Data Transaksi</span>
+                  <span class="ml-auto bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-full">${AppState.salesRaw.length}</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='products'; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition ${AppState.activeTab === 'products' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}"
+                >
+                  <i data-lucide="package" class="w-4 h-4"></i>
+                  <span>Katalog Produk</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='activity'; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition ${AppState.activeTab === 'activity' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}"
+                >
+                  <i data-lucide="history" class="w-4 h-4"></i>
+                  <span>Log Aktivitas</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='settings'; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition ${AppState.activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}"
+                >
+                  <i data-lucide="settings" class="w-4 h-4"></i>
+                  <span>Pengaturan API</span>
+                </button>
+              </nav>
+            </div>
+
+            <!-- User Session Footer & Logout -->
+            <div class="p-4 border-t border-slate-800 bg-slate-950/50">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                  <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center shrink-0 border border-blue-500/30">
+                    ${session.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="truncate">
+                    <p class="text-xs font-bold text-white truncate">${session.name || session.username}</p>
+                    <p class="text-[10px] text-slate-400 capitalize">${session.role}</p>
+                  </div>
+                </div>
+
+                <button 
+                  onclick="AuthService.logout()" 
+                  title="Keluar Sesi"
+                  class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                >
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content Area -->
+          <main class="flex-1 flex flex-col bg-slate-50 overflow-y-auto">
+            <!-- Header Top Bar -->
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 shadow-xs">
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 capitalize">${AppState.activeTab.replace('-', ' ')}</h2>
+                <div class="flex items-center space-x-2 mt-0.5">
+                  <span class="inline-flex items-center text-xs text-slate-500">
+                    Update Terakhir: ${AppState.lastUpdated ? formatDate(AppState.lastUpdated) : 'Belum pernah'}
+                  </span>
+                  <span class="text-slate-300">•</span>
+                  <span class="inline-flex items-center text-[11px] font-semibold ${AppState.apiConnectionStatus.success ? 'text-emerald-600' : 'text-amber-600'}">
+                    <span class="w-2 h-2 rounded-full ${AppState.apiConnectionStatus.success ? 'bg-emerald-500' : 'bg-amber-500'} mr-1.5 animate-pulse"></span>
+                    ${AppState.apiConnectionStatus.message}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button 
+                  onclick="AppState.toggleAutoSync()" 
+                  class="px-3 py-2 ${AppState.autoSyncEnabled ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-700'} border text-xs font-semibold rounded-xl flex items-center space-x-1.5 transition"
+                >
+                  <i data-lucide="pulse" class="w-3.5 h-3.5 ${AppState.autoSyncEnabled ? 'text-emerald-600 animate-spin' : ''}"></i>
+                  <span>Auto-Sync: ${AppState.autoSyncEnabled ? 'ON (15s)' : 'OFF'}</span>
+                </button>
+
+                <button 
+                  onclick="AppState.loadData()" 
+                  class="px-3 py-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl flex items-center space-x-1.5 transition"
+                >
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5 ${AppState.loading ? 'animate-spin text-blue-600' : ''}"></i>
+                  <span>Sinkronkan Data</span>
+                </button>
+
+                <button 
+                  onclick="openAddTxModal()" 
+                  class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 shadow-md shadow-blue-500/20 transition"
+                >
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Transaksi Baru</span>
+                </button>
+              </div>
+            </header>
+
+            <!-- Notification Toast / Alert -->
+            ${AppState.toastMessage ? `
+              <div class="mx-6 mt-4 p-3 bg-emerald-500 text-white rounded-xl text-xs shadow-lg flex items-center justify-between transition">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                  <span>${AppState.toastMessage}</span>
+                </div>
+              </div>
+            ` : ''}
+
+            ${AppState.apiError ? `
+              <div class="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                  <span>${AppState.apiError}</span>
+                </div>
+                <button onclick="AppState.apiError=null; AppState.render();" class="text-amber-700 font-bold hover:underline text-[11px]">Tutup</button>
+              </div>
+            ` : ''}
+
+            <!-- Body Content Tabs -->
+            <div class="p-6 flex-1 space-y-6">
+              ${renderActiveTabContent(session, metrics)}
+            </div>
+          </main>
+        </div>
+
+        <!-- Modals Section -->
+        ${AppState.txModalOpen ? renderAddTxModal() : ''}
+        ${AppState.selectedTx ? renderTxDetailModal() : ''}
+      `;
+    }
+
+    function renderActiveTabContent(session, metrics) {
+      switch (AppState.activeTab) {
+        case 'transactions':
+          return renderTransactionsTab();
+        case 'products':
+          return renderProductsTab();
+        case 'activity':
+          return renderActivityTab();
+        case 'settings':
+          return renderSettingsTab();
+        case 'dashboard':
+        default:
+          return renderDashboardSummaryTab(metrics);
+      }
+    }
+
+    function renderDashboardSummaryTab(metrics) {
+      return `
+        <!-- Metrics Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Omzet -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Total Omzet Penjualan</span>
+              <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.totalOmzet)}</p>
+              <p class="text-[11px] text-slate-400 mt-1">Lunas & Sukses</p>
+            </div>
+          </div>
+
+          <!-- Total Transaksi -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Total Transaksi</span>
+              <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${metrics.totalTxCount}</p>
+              <p class="text-[11px] text-slate-400 mt-1">${metrics.completedCount} Selesai, ${metrics.pendingCount} Pending</p>
+            </div>
+          </div>
+
+          <!-- Rata-rata Nilai Order -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Rata-rata Order</span>
+              <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                <i data-lucide="trending-up" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.avgTxValue)}</p>
+              <p class="text-[11px] text-slate-400 mt-1">Per Transaksi Selesai</p>
+            </div>
+          </div>
+
+          <!-- Omzet Hari Ini -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Omzet Hari Ini</span>
+              <div class="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <div>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.todayOmzet)}</p>
+              <p class="text-[11px] text-slate-400 mt-1">Tanggal ${new Date().toLocaleDateString('id-ID')}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Preview -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Transaksi Terbaru</h3>
+              <p class="text-xs text-slate-500">Daftar transaksi terkini Corat Coret Layar</p>
+            </div>
+            <button 
+              onclick="AppState.activeTab='transactions'; AppState.render();" 
+              class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              Lihat Semua
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th class="py-3 px-4">Invoice</th>
+                  <th class="py-3 px-4">Tanggal</th>
+                  <th class="py-3 px-4">Pelanggan</th>
+                  <th class="py-3 px-4">Produk</th>
+                  <th class="py-3 px-4">Total</th>
+                  <th class="py-3 px-4">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${AppState.salesRaw.length === 0 ? `
+                  <tr>
+                    <td colspan="6" class="py-12 text-center text-slate-400">
+                      <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                      Belum ada data transaksi. Klik <strong>"Transaksi Baru"</strong> untuk menginput penjualan.
+                    </td>
+                  </tr>
+                ` : AppState.salesRaw.slice(0, 5).map(tx => `
+                  <tr class="hover:bg-slate-50/80 cursor-pointer transition" onclick="openTxDetail('${tx.invoice || tx.id}')">
+                    <td class="py-3 px-4 font-mono font-bold text-blue-600">${tx.invoice || tx.id}</td>
+                    <td class="py-3 px-4 text-slate-500">${formatDate(tx.date || tx.created_at)}</td>
+                    <td class="py-3 px-4 font-medium text-slate-800">${tx.customer || 'Pelanggan Umum'}</td>
+                    <td class="py-3 px-4 text-slate-600">${tx.product || tx.items || 'Layanan Cetak'}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900">${formatIDR(tx.total || tx.amount || 0)}</td>
+                    <td class="py-3 px-4">${renderStatusBadge(tx.status)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTransactionsTab() {
+      const filtered = AppState.salesRaw.filter(tx => {
+        const query = AppState.txSearch.toLowerCase();
+        const invoice = (tx.invoice || tx.id || '').toLowerCase();
+        const customer = (tx.customer || '').toLowerCase();
+        const product = (tx.product || '').toLowerCase();
+
+        const matchSearch = !query || invoice.includes(query) || customer.includes(query) || product.includes(query);
+        const status = (tx.status || 'Completed').toLowerCase();
+        const matchStatus = AppState.txStatus === 'ALL' || status.includes(AppState.txStatus.toLowerCase());
+
+        return matchSearch && matchStatus;
+      });
+
+      return `
+        <div class="space-y-4">
+          <!-- Filter & Action Header -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap gap-3 items-center justify-between">
+            <div class="flex flex-wrap gap-2 flex-1">
+              <input 
+                type="text" 
+                placeholder="Cari invoice, pelanggan, produk..." 
+                value="${AppState.txSearch}" 
+                oninput="AppState.txSearch = this.value; AppState.render();"
+                class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs w-full sm:w-72 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+              />
+              <select 
+                onchange="AppState.txStatus = this.value; AppState.render();"
+                class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+              >
+                <option value="ALL" ${AppState.txStatus === 'ALL' ? 'selected' : ''}>Semua Status</option>
+                <option value="Completed" ${AppState.txStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                <option value="Pending" ${AppState.txStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+              </select>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button 
+                onclick="exportToCSV(AppState.salesRaw)" 
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+              >
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Invoice</th>
+                    <th class="py-3.5 px-4">Tanggal</th>
+                    <th class="py-3.5 px-4">Pelanggan</th>
+                    <th class="py-3.5 px-4">Produk</th>
+                    <th class="py-3.5 px-4">Qty</th>
+                    <th class="py-3.5 px-4">Total</th>
+                    <th class="py-3.5 px-4">Metode</th>
+                    <th class="py-3.5 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="8" class="py-12 text-center text-slate-400">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Tidak ada transaksi yang cocok dengan filter.
+                      </td>
+                    </tr>
+                  ` : filtered.map(tx => `
+                    <tr class="hover:bg-slate-50/80 cursor-pointer transition" onclick="openTxDetail('${tx.invoice || tx.id}')">
+                      <td class="py-3 px-4 font-mono font-bold text-blue-600">${tx.invoice || tx.id}</td>
+                      <td class="py-3 px-4 text-slate-500">${formatDate(tx.date || tx.created_at)}</td>
+                      <td class="py-3 px-4 font-medium text-slate-800">${tx.customer || 'Pelanggan Umum'}</td>
+                      <td class="py-3 px-4 text-slate-600">${tx.product || 'Layanan Cetak'}</td>
+                      <td class="py-3 px-4 text-slate-600">${tx.qty || 1}</td>
+                      <td class="py-3 px-4 font-bold text-slate-900">${formatIDR(tx.total || tx.amount || 0)}</td>
+                      <td class="py-3 px-4 text-slate-500">${tx.payment_method || 'QRIS'}</td>
+                      <td class="py-3 px-4">${renderStatusBadge(tx.status)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductsTab() {
+      return `
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b pb-4 border-slate-100">
+            <div>
+              <h3 class="font-bold text-slate-900">Katalog Produk & Layanan</h3>
+              <p class="text-xs text-slate-500">Daftar harga standar jasa cetak & desain Corat Coret Layar</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${AppState.productsRaw.map(p => `
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 hover:bg-white hover:shadow-md transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">${p.category || 'Layanan'}</span>
+                  <span class="text-xs font-mono text-slate-400">${p.id}</span>
+                </div>
+                <h4 class="font-bold text-slate-900 text-sm">${p.name}</h4>
+                <p class="text-base font-extrabold text-slate-900 font-mono">${formatIDR(p.price)}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActivityTab() {
+      const logs = AuthService.getActivityLogs();
+      return `
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-900">Log Aktivitas Admin</h3>
+            <p class="text-xs text-slate-500">Catatan riwayat tindakan pengguna pada sistem</p>
+          </div>
+
+          <div class="space-y-2">
+            ${logs.length === 0 ? `
+              <p class="text-xs text-slate-400 py-6 text-center">Belum ada riwayat aktivitas.</p>
+            ` : logs.map(log => `
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 rounded-full bg-blue-600"></div>
+                  <div>
+                    <span class="font-bold text-slate-900">${log.username}</span>: 
+                    <span class="text-slate-600">${log.action}</span>
+                  </div>
+                </div>
+                <span class="text-[11px] text-slate-400 font-mono">${formatDate(log.timestamp)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettingsTab() {
+      const currentUrl = ApiService.getApiUrl();
+      return `
+        <div class="space-y-6 max-w-3xl">
+          <!-- Form Endpoint -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+            <div>
+              <h3 class="font-bold text-slate-900">Pengaturan Endpoint API</h3>
+              <p class="text-xs text-slate-500">Konfigurasi URL Backend Vercel / server rekapitulasi Anda</p>
+            </div>
+
+            <form onsubmit="handleSaveSettings(event)" class="space-y-4 text-xs">
+              <div class="space-y-1">
+                <label class="font-bold text-slate-700">Base API URL</label>
+                <input 
+                  type="url" 
+                  id="input-api-url" 
+                  value="${currentUrl}" 
+                  required 
+                  class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none transition"
+                />
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <p class="font-bold text-slate-700 text-[11px]">Status Diagnostic Diagnosa API:</p>
+                <p class="font-mono text-[11px] ${AppState.apiConnectionStatus.success ? 'text-emerald-700' : 'text-amber-700'}">
+                  ${AppState.apiConnectionStatus.message}
+                </p>
+              </div>
+
+              <div class="pt-2 flex justify-end space-x-2">
+                <button 
+                  type="button" 
+                  onclick="ApiService.setApiUrl('${DEFAULT_API_URL}'); AppState.showToast('URL API dikembalikan ke default Vercel'); AppState.render();" 
+                  class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+                >
+                  Reset Default
+                </button>
+                <button 
+                  type="submit" 
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md"
+                >
+                  Simpan Konfigurasi
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Documentation: Caranya agar checkout website masuk ke dashboard -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+            <div class="flex items-center space-x-2">
+              <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <i data-lucide="code" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900">Cara Mengirim Transaksi Checkout ke Dashboard</h3>
+                <p class="text-xs text-slate-500">Integrasikan formulir checkout website pertama Anda ke endpoint backend berikut</p>
+              </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              <p class="text-slate-600">
+                Saat tombol <strong>Checkout/Bayar</strong> diklik di website checkout pertama Anda, tambahkan request <code class="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono">POST</code> ke server backend Vercel Anda:
+              </p>
+
+              <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-[11px] overflow-x-auto space-y-2">
+                <p class="text-emerald-400">// Contoh HTTP POST Payload dari Website Checkout Anda:</p>
+                <pre><code>POST ${currentUrl}/v1/sales
+Content-Type: application/json
+
+{
+  "customer": "Budi Santoso",
+  "product": "Cetak Banner Fleksi 3x1m",
+  "qty": 2,
+  "total": 150000,
+  "payment_method": "QRIS",
+  "status": "Completed"
+}</code></pre>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px] space-y-1">
+                <p class="font-bold text-slate-700">Catatan:</p>
+                <p>Field <code class="bg-slate-200/70 px-1 rounded">id</code> boleh tidak disertakan — server akan otomatis membuatkan ID unik jika kosong. Karena dashboard ini sekarang satu domain dengan backend, cukup panggil path relatif <code class="bg-slate-200/70 px-1 rounded">/api/v1/sales</code> dari kode checkout Anda.</p>
+              </div>
+
+              <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-[11px] space-y-1">
+                <p class="font-bold">Tips Integrasi Instan:</p>
+                <p>Setelah website checkout Anda berhasil mengirim POST ke server, dashboard ini akan otomatis menampilkannya — <strong>Auto-Sync</strong> sudah aktif secara default (refresh tiap 15 detik) sehingga transaksi baru muncul tanpa perlu refresh halaman manual.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleSaveSettings(e) {
+      e.preventDefault();
+      const newUrl = document.getElementById('input-api-url').value.trim();
+      ApiService.setApiUrl(newUrl);
+      AppState.showToast('Pengaturan API berhasil diperbarui!');
+      AppState.loadData();
+    }
+
+    function renderAddTxModal() {
+      return `
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <h3 class="font-bold text-slate-900 text-sm">Input Transaksi Penjualan Real</h3>
+              <button onclick="closeAddTxModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <form onsubmit="handleSaveTx(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Pelanggan</label>
+                <input 
+                  type="text" 
+                  id="tx-form-customer" 
+                  placeholder="Contoh: Budi / Pelanggan Umum" 
+                  required 
+                  class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Produk / Jasa</label>
+                <input 
+                  type="text" 
+                  id="tx-form-product" 
+                  placeholder="Contoh: Desain Poster & Cetak Spanduk" 
+                  required 
+                  class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none" 
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Jumlah (Qty)</label>
+                  <input 
+                    type="number" 
+                    id="tx-form-qty" 
+                    value="1" 
+                    min="1" 
+                    required 
+                    class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none" 
+                  />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Total (Rp)</label>
+                  <input 
+                    type="number" 
+                    id="tx-form-total" 
+                    placeholder="150000" 
+                    min="0" 
+                    required 
+                    class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none" 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Metode Pembayaran</label>
+                <select id="tx-form-payment" class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <option value="QRIS">QRIS</option>
+                  <option value="Transfer BCA">Transfer BCA</option>
+                  <option value="Transfer Mandiri">Transfer Mandiri</option>
+                  <option value="Tunai">Tunai / Cash</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Status Pembayaran</label>
+                <select id="tx-form-status" class="w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <option value="Completed">Completed / Lunas</option>
+                  <option value="Pending">Pending / Dalam Proses</option>
+                </select>
+              </div>
+
+              <div class="pt-3 flex justify-end space-x-2">
+                <button type="button" onclick="closeAddTxModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md">Simpan Transaksi</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function openAddTxModal() {
+      AppState.txModalOpen = true;
+      AppState.render();
+    }
+
+    function closeAddTxModal() {
+      AppState.txModalOpen = false;
+      AppState.render();
+    }
+
+    async function handleSaveTx(e) {
+      e.preventDefault();
+      const customer = document.getElementById('tx-form-customer').value.trim();
+      const product = document.getElementById('tx-form-product').value.trim();
+      const qty = parseInt(document.getElementById('tx-form-qty').value) || 1;
+      const total = parseInt(document.getElementById('tx-form-total').value) || 0;
+      const payment = document.getElementById('tx-form-payment').value;
+      const status = document.getElementById('tx-form-status').value;
+
+      const now = new Date();
+      const invNum = 'INV-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(100 + Math.random() * 900);
+
+      const newTx = {
+        id: 'TX-' + Date.now(),
+        invoice: invNum,
+        customer,
+        product,
+        qty,
+        total,
+        payment_method: payment,
+        status,
+        date: now.toISOString()
+      };
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+
+      try {
+        // Kirim langsung ke backend (endpoint yang sama dipakai checkout di
+        // website utama), supaya transaksi yang diinput manual di sini juga
+        // menjadi data ASLI yang tersimpan di server — bukan cuma tersimpan
+        // di browser ini saja.
+        const baseUrl = ApiService.getApiUrl();
+        const res = await fetch(`${baseUrl}/v1/sales`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTx)
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || `HTTP ${res.status}`);
+        }
+
+        const session = AuthService.getSession();
+        if (session) {
+          AuthService.logActivity(session.username, `Menambah transaksi baru: ${invNum} (${formatIDR(total)})`);
+        }
+
+        AppState.txModalOpen = false;
+        AppState.showToast(`Transaksi ${invNum} berhasil disimpan ke server!`);
+        AppState.loadData();
+      } catch (err) {
+        AppState.showToast(`Gagal menyimpan ke server: ${err.message}. Cek Pengaturan API.`);
+        AppState.render();
+      }
+    }
+
+    function renderTxDetailModal() {
+      const tx = AppState.selectedTx;
+      if (!tx) return '';
+
+      return `
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900 font-mono text-sm">${tx.invoice || tx.id}</h3>
+                <p class="text-[11px] text-slate-400">${formatDate(tx.date || tx.created_at)}</p>
+              </div>
+              <button onclick="closeTxDetail()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              <div class="bg-slate-50 p-3 rounded-xl space-y-1">
+                <p class="text-slate-400 font-medium">Pelanggan</p>
+                <p class="font-bold text-slate-900">${tx.customer || 'Pelanggan Umum'}</p>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl space-y-1">
+                <p class="text-slate-400 font-medium">Produk / Layanan</p>
+                <p class="font-bold text-slate-900">${tx.product || tx.items || 'Layanan Cetak'}</p>
+                <p class="text-slate-500">Qty: ${tx.qty || 1}</p>
+              </div>
+
+              <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                <div>
+                  <p class="text-slate-400 font-medium">Total Pembayaran</p>
+                  <p class="font-extrabold text-slate-900 font-mono text-base">${formatIDR(tx.total || tx.amount || 0)}</p>
+                </div>
+                <div>
+                  ${renderStatusBadge(tx.status)}
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl space-y-1">
+                <p class="text-slate-400 font-medium">Metode Pembayaran</p>
+                <p class="font-bold text-slate-900">${tx.payment_method || 'QRIS'}</p>
+              </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button onclick="closeTxDetail()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Tutup</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openTxDetail(invOrId) {
+      const found = AppState.salesRaw.find(x => (x.invoice || x.id) === invOrId);
+      if (found) {
+        AppState.selectedTx = found;
+        AppState.render();
+      }
+    }
+
+    function closeTxDetail() {
+      AppState.selectedTx = null;
+      AppState.render();
+    }
+
+    function exportToCSV(data) {
+      if (!data || data.length === 0) {
+        AppState.showToast('Tidak ada data transaksi untuk diexport.');
+        return;
+      }
+
+      const headers = ['Invoice', 'Tanggal', 'Pelanggan', 'Produk', 'Qty', 'Total', 'Metode', 'Status'];
+      const rows = data.map(tx => [
+        `"${tx.invoice || tx.id || ''}"`,
+        `"${formatDate(tx.date || tx.created_at)}"`,
+        `"${tx.customer || 'Pelanggan Umum'}"`,
+        `"${tx.product || 'Layanan'}"`,
+        tx.qty || 1,
+        tx.total || tx.amount || 0,
+        `"${tx.payment_method || 'QRIS'}"`,
+        `"${tx.status || 'Completed'}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `Rekap_Penjualan_CCL_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      AppState.loadData();
+
+      // Nyalakan interval auto-sync sejak halaman dibuka (bukan cuma saat
+      // tombol Auto-Sync ditekan), supaya checkout baru otomatis muncul.
+      if (AppState.autoSyncEnabled && !AppState.autoSyncTimer) {
+        AppState.autoSyncTimer = setInterval(() => {
+          AppState.loadData();
+        }, 15000);
+      }
+    });
+
+    // Refresh instan begitu tab dashboard ini dibuka kembali (misalnya user
+    // baru saja checkout di tab lain lalu kembali ke /penjualan).
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        AppState.loadData();
+      }
+    });
+  </script>
+</body>
+</html>
