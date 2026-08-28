@@ -47,7 +47,6 @@
   <div id="app" class="min-h-screen flex flex-col"></div>
 
   <script>
-    // Storage Keys Configuration
     const STORAGE_KEYS = {
       API_URL: 'ccl_api_base_url',
       USERS: 'ccl_admin_users',
@@ -65,7 +64,6 @@
       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
     ];
 
-    // Helper Enkripsi SHA-256 untuk menyembunyikan kredensial mentah dari source code
     async function hashCredentials(text) {
       const encoder = new TextEncoder();
       const data = encoder.encode(text);
@@ -74,10 +72,8 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Hash awal bawaan untuk akun default owner agar password tidak terlihat di source code
-    const DEFAULT_OWNER_HASH = '1f1e944743e8d9762fa112f462a6b29d479e00eb23ef52ff2425049537f54c9c'; // Hash terenkripsi
+    const DEFAULT_OWNER_HASH = '1f1e944743e8d9762fa112f462a6b29d479e00eb23ef52ff2425049537f54c9c';
 
-    // Helper Utility: Formatting Rupiah Currency
     function formatIDR(amount) {
       const numericVal = Number(amount) || 0;
       return new Intl.NumberFormat('id-ID', {
@@ -87,7 +83,6 @@
       }).format(numericVal);
     }
 
-    // Helper Utility: Formatting Date
     function formatDate(dateString) {
       if (!dateString) return '-';
       try {
@@ -105,7 +100,6 @@
       }
     }
 
-    // Helper Utility: Render Status Badges safely
     function renderStatusBadge(status) {
       const s = (status || 'Completed').toString().toLowerCase();
       if (s.includes('completed') || s.includes('lunas') || s.includes('sukses')) {
@@ -123,7 +117,6 @@
       }
     }
 
-    // AuthService Module
     const AuthService = {
       getSession() {
         try {
@@ -145,7 +138,6 @@
         try {
           const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
           if (users.length === 0) {
-            // Seed default owner account tanpa password mentah di source code
             const defaultOwner = [{
               username: 'admin',
               name: 'Owner CCL',
@@ -168,12 +160,9 @@
         const users = this.getUsers();
 
         const foundUser = users.find(u => u.username.toLowerCase() === cleanUser);
-
-        // Validasi khusus untuk kredensial default Owner (admin / 123)
         const isDefaultOwnerAdmin = (cleanUser === 'admin' && password === '123');
 
         if (foundUser && (foundUser.authHash === inputHash || isDefaultOwnerAdmin || (foundUser.username === 'admin' && inputHash === DEFAULT_OWNER_HASH))) {
-          // Sinkronisasi hash tersimpan jika login dengan password default 123
           if (isDefaultOwnerAdmin && foundUser.authHash !== inputHash) {
             foundUser.authHash = inputHash;
             localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
@@ -264,7 +253,6 @@
       }
     };
 
-    // ApiService Module
     const ApiService = {
       getApiUrl() {
         return localStorage.getItem(STORAGE_KEYS.API_URL) || DEFAULT_API_URL;
@@ -274,7 +262,54 @@
         localStorage.setItem(STORAGE_KEYS.API_URL, url);
       },
 
+      // Helper untuk mengambil transaksi lokal yang tersimpan
+      getLocalSales() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_SALES) || '[]');
+        } catch (e) {
+          return [];
+        }
+      },
+
+      // Helper untuk menyimpan data transaksi secara permanen ke LocalStorage
+      saveLocalSales(sales) {
+        try {
+          localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(sales));
+        } catch (e) {
+          console.error('Gagal menyimpan transaksi lokal:', e);
+        }
+      },
+
+      // Menggabungkan data dari API dengan data lokal tanpa menghapus transaksi baru yang belum disinkron
+      mergeSalesData(apiSales, localSales) {
+        const map = new Map();
+        
+        // Utamakan data lokal terlebih dahulu
+        (localSales || []).forEach(item => {
+          const key = (item.invoice || item.id || '').toString();
+          if (key) map.set(key, item);
+        });
+
+        // Masukkan / perbarui dengan data dari API
+        (apiSales || []).forEach(item => {
+          const key = (item.invoice || item.id || '').toString();
+          if (key) {
+            // Gabungkan properti jika sudah ada, atau tambahkan jika baru
+            const existing = map.get(key) || {};
+            map.set(key, { ...existing, ...item });
+          }
+        });
+
+        return Array.from(map.values()).sort((a, b) => {
+          const dateA = new Date(a.date || a.created_at || 0);
+          const dateB = new Date(b.date || b.created_at || 0);
+          return dateB - dateA;
+        });
+      },
+
       async fetchSalesData() {
+        const cachedSales = this.getLocalSales();
+
         try {
           const baseUrl = this.getApiUrl();
           const controller = new AbortController();
@@ -295,20 +330,43 @@
             const data = await res.json();
             const apiSales = Array.isArray(data) ? data : (data?.data || data?.sales || []);
 
+            // PERBAIKAN UTAMA: Gabungkan data dari API dengan data lokal (TIDAK MENIMPA HILANG)
+            const mergedSales = this.mergeSalesData(apiSales, cachedSales);
+            this.saveLocalSales(mergedSales);
+
             AppState.apiConnectionStatus = {
               success: true,
-              message: `Terhubung ke API Server — ${apiSales.length} transaksi ditemukan`
+              message: `Terhubung ke API — ${mergedSales.length} transaksi dimuat (${apiSales.length} server, ${cachedSales.length} lokal)`
             };
-            return apiSales;
+            return mergedSales;
           }
           throw new Error(`HTTP ${res.status}: ${res.statusText || 'Gagal memuat API'}`);
         } catch (error) {
-          const cachedSales = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_SALES) || '[]');
+          // Jika API Server offline / offline mode, gunakan data tersimpan di LocalStorage
           AppState.apiConnectionStatus = {
             success: false,
-            message: `Menggunakan cache lokal (${error.message || 'Server API offline'})`
+            message: `Mode Penyimpanan Lokal (${cachedSales.length} transaksi tersimpan)`
           };
           return cachedSales;
+        }
+      },
+
+      async sendTransactionToApi(txData) {
+        try {
+          const baseUrl = this.getApiUrl();
+          const endpoint = baseUrl.endsWith('/v1/sales') || baseUrl.includes('/v1/sales')
+            ? baseUrl
+            : `${baseUrl.replace(/\/$/, '')}/v1/sales`;
+
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(txData)
+          });
+          return res.ok;
+        } catch (e) {
+          console.warn('API POST warn (tersimpan di lokal):', e);
+          return false;
         }
       },
 
@@ -331,9 +389,8 @@
       }
     };
 
-    // AppState Application Core State
     const AppState = {
-      activeTab: 'dashboard', // 'dashboard', 'rekap', 'transactions', 'users', 'activity', 'settings'
+      activeTab: 'dashboard',
       salesRaw: [],
       loading: false,
       apiError: null,
@@ -341,25 +398,20 @@
       apiConnectionStatus: { success: false, message: 'Belum dicek' },
       mobileMenuOpen: false,
 
-      // Toast Notifications
       toastMessage: null,
 
-      // Filters for Rekap Penjualan
-      rekapMode: 'month', // 'month' atau 'date'
+      rekapMode: 'month',
       selectedYear: new Date().getFullYear(),
-      selectedMonth: new Date().getMonth(), // 0-indexed (0 = Jan)
-      selectedDate: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+      selectedMonth: new Date().getMonth(),
+      selectedDate: new Date().toISOString().slice(0, 10),
 
-      // Modals
       addUserModalOpen: false,
 
-      // Transaksi Filters & Selection
       txSearch: '',
       txStatus: 'ALL',
       selectedTx: null,
       deleteConfirmTx: null,
 
-      // Modals
       txModalOpen: false,
 
       getFilteredTransactions() {
@@ -405,16 +457,14 @@
         this.render();
 
         try {
+          // Ambil data dari API dan gabungkan secara aman dengan data lokal
           const sales = await ApiService.fetchSalesData();
           this.salesRaw = sales || [];
           this.lastUpdated = new Date().toISOString();
           this.apiError = null;
-
-          if (this.apiConnectionStatus.success) {
-            localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(this.salesRaw));
-          }
         } catch (err) {
-          this.apiError = 'Gagal memuat data otomatis. Menampilkan data tersimpan.';
+          this.apiError = 'Gagal memuat data otomatis. Menampilkan data tersimpan di lokal.';
+          this.salesRaw = ApiService.getLocalSales();
         } finally {
           this.loading = false;
           this.render();
@@ -496,11 +546,9 @@
       };
     }
 
-    // Modern White Login Screen (Emerald Accent, No Blue/Purple)
     function renderLoginScreen() {
       return `
         <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
-          <!-- Ambient Light Accents -->
           <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-200/40 rounded-full blur-[100px] pointer-events-none"></div>
           <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-200/40 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -563,7 +611,6 @@
               </button>
             </form>
 
-            <!-- Tombol / Pilihan Kembali ke Website -->
             <div class="pt-4 border-t border-slate-100 flex flex-col items-center">
               <a 
                 href="https://coratcoretlayar.vercel.app" 
@@ -596,16 +643,14 @@
       }
     }
 
-    // Main Dashboard Layout (White Light Mode Theme)
     function renderDashboardScreen(session) {
       const metrics = computeMetrics(AppState.salesRaw);
 
       return `
         <div class="flex-1 flex flex-col md:flex-row min-h-screen bg-slate-50 text-slate-800">
-          <!-- Sidebar Navigation (Clean White Style) -->
+          <!-- Sidebar Navigation -->
           <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200/90 flex flex-col justify-between shrink-0 shadow-xs z-30">
             <div>
-              <!-- Logo Header -->
               <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                   <div class="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold shadow-md shadow-emerald-600/20 shrink-0">
@@ -617,7 +662,6 @@
                   </div>
                 </div>
 
-                <!-- Mobile Menu Toggle Button -->
                 <button 
                   onclick="AppState.mobileMenuOpen = !AppState.mobileMenuOpen; AppState.render();"
                   class="md:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
@@ -626,7 +670,6 @@
                 </button>
               </div>
 
-              <!-- Nav Menu Items -->
               <nav class="${AppState.mobileMenuOpen ? 'block' : 'hidden'} md:block p-3 space-y-1 text-xs font-semibold">
                 <button 
                   onclick="AppState.activeTab='dashboard'; AppState.mobileMenuOpen=false; AppState.render();"
@@ -636,7 +679,6 @@
                   <span>Ringkasan Dashboard</span>
                 </button>
 
-                <!-- FITUR REKAP PENJUALAN PER BULAN & TANGGAL -->
                 <button 
                   onclick="AppState.activeTab='rekap'; AppState.mobileMenuOpen=false; AppState.render();"
                   class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'rekap' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
@@ -655,7 +697,6 @@
                   <span class="ml-auto bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-md font-mono border border-slate-200">${AppState.salesRaw.length}</span>
                 </button>
 
-                <!-- HANYA OWNER YANG BISA MELIHAT MENU KELOLA ADMIN -->
                 ${session.role === 'Owner' ? `
                   <button 
                     onclick="AppState.activeTab='users'; AppState.mobileMenuOpen=false; AppState.render();"
@@ -683,7 +724,6 @@
                   <span>Pengaturan API</span>
                 </button>
 
-                <!-- Link Kembali ke Website Utama di Sidebar -->
                 <a 
                   href="https://coratcoretlayar.vercel.app" 
                   class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 mt-4 border border-dashed border-slate-200"
@@ -695,7 +735,6 @@
               </nav>
             </div>
 
-            <!-- User Session Footer & Logout -->
             <div class="${AppState.mobileMenuOpen ? 'block' : 'hidden'} md:block p-4 border-t border-slate-100 bg-slate-50/50">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2.5 overflow-hidden">
@@ -721,7 +760,6 @@
 
           <!-- Main Content Area -->
           <main class="flex-1 flex flex-col bg-slate-50 overflow-y-auto">
-            <!-- Header Top Bar -->
             <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20 shadow-xs">
               <div>
                 <h2 class="text-base font-bold text-slate-900 capitalize flex items-center space-x-2">
@@ -732,8 +770,8 @@
                     Update Terakhir: ${AppState.lastUpdated ? formatDate(AppState.lastUpdated) : 'Belum pernah'}
                   </span>
                   <span class="text-slate-300">•</span>
-                  <span class="inline-flex items-center text-[11px] font-medium ${AppState.apiConnectionStatus.success ? 'text-emerald-700' : 'text-amber-700'}">
-                    <span class="w-1.5 h-1.5 rounded-full ${AppState.apiConnectionStatus.success ? 'bg-emerald-500' : 'bg-amber-500'} mr-1.5 animate-pulse"></span>
+                  <span class="inline-flex items-center text-[11px] font-medium ${AppState.apiConnectionStatus.success ? 'text-emerald-700' : 'text-slate-600'}">
+                    <span class="w-1.5 h-1.5 rounded-full ${AppState.apiConnectionStatus.success ? 'bg-emerald-500' : 'bg-slate-400'} mr-1.5 animate-pulse"></span>
                     ${AppState.apiConnectionStatus.message}
                   </span>
                 </div>
@@ -758,7 +796,6 @@
               </div>
             </header>
 
-            <!-- Notification Toast / Alert -->
             ${AppState.toastMessage ? `
               <div class="mx-6 mt-4 p-3.5 bg-emerald-600 text-white rounded-xl text-xs shadow-lg flex items-center justify-between animate-fade-in">
                 <div class="flex items-center space-x-2.5">
@@ -778,14 +815,12 @@
               </div>
             ` : ''}
 
-            <!-- Body Content Tabs -->
             <div class="p-6 flex-1 space-y-6">
               ${renderActiveTabContent(session, metrics)}
             </div>
           </main>
         </div>
 
-        <!-- Modals Section -->
         ${AppState.txModalOpen ? renderAddTxModal() : ''}
         ${AppState.selectedTx ? renderTxDetailModal() : ''}
         ${AppState.deleteConfirmTx ? renderDeleteConfirmModal() : ''}
@@ -822,13 +857,10 @@
       }
     }
 
-    // TAB 1: Ringkasan Dashboard
     function renderDashboardSummaryTab(metrics) {
       return `
         <div class="space-y-6 animate-fade-in">
-          <!-- Metrics Cards Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Total Omzet -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500">Total Omzet Penjualan</span>
@@ -842,7 +874,6 @@
               </div>
             </div>
 
-            <!-- Total Transaksi -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500">Total Transaksi</span>
@@ -856,7 +887,6 @@
               </div>
             </div>
 
-            <!-- Rata-rata Nilai Order -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500">Rata-rata Order</span>
@@ -870,7 +900,6 @@
               </div>
             </div>
 
-            <!-- Omzet Hari Ini -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500">Omzet Hari Ini</span>
@@ -885,7 +914,6 @@
             </div>
           </div>
 
-          <!-- Recent Transactions Preview Table -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -893,7 +921,7 @@
                 <p class="text-xs text-slate-500">Daftar transaksi terkini dari sistem kasir/checkout Corat Coret Layar</p>
               </div>
               <button 
-                onclick="AppState.activeTab='transactions'; AppState.render(); font-bold" 
+                onclick="AppState.activeTab='transactions'; AppState.render();" 
                 class="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center space-x-1"
               >
                 <span>Lihat Semua</span>
@@ -939,7 +967,6 @@
       `;
     }
 
-    // TAB 2: FITUR REKAP PENJUALAN PER BULAN & PER TANGGAL
     function renderMonthlySalesRecapTab() {
       const yearsSet = new Set();
       yearsSet.add(new Date().getFullYear());
@@ -951,12 +978,10 @@
 
       const selYear = Number(AppState.selectedYear);
       const selMonth = Number(AppState.selectedMonth);
-      const selDate = AppState.selectedDate; // YYYY-MM-DD
+      const selDate = AppState.selectedDate;
 
-      // Filter Transaksi Berdasarkan Mode (Per Bulan vs Per Tanggal Spesifik)
       const periodSales = AppState.getPeriodSales();
 
-      // Hitung Metrik Rekapitulasi
       let totalOmzetBulan = 0;
       let completedCountBulan = 0;
       let pendingCountBulan = 0;
@@ -998,7 +1023,6 @@
 
       return `
         <div class="space-y-6 animate-fade-in">
-          <!-- Filter Controls Card -->
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-4 items-center justify-between">
             <div>
               <h3 class="font-bold text-slate-900 text-sm">Pilih Periode Rekap Penjualan</h3>
@@ -1006,7 +1030,6 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <!-- Selector Mode Filter -->
               <div class="bg-slate-100 p-1 rounded-xl flex items-center space-x-1 text-xs font-semibold">
                 <button 
                   onclick="AppState.rekapMode='month'; AppState.render();" 
@@ -1023,7 +1046,6 @@
               </div>
 
               ${AppState.rekapMode === 'month' ? `
-                <!-- Dropdown Bulan & Tahun -->
                 <div class="relative">
                   <select 
                     onchange="AppState.selectedMonth = parseInt(this.value); AppState.render();"
@@ -1048,7 +1070,6 @@
                   <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                 </div>
               ` : `
-                <!-- Input Date Picker -->
                 <input 
                   type="date" 
                   value="${selDate}" 
@@ -1067,7 +1088,6 @@
             </div>
           </div>
 
-          <!-- Highlight Metrik -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md space-y-2 relative overflow-hidden">
               <span class="text-xs font-semibold text-emerald-100">Total Omzet (${periodLabel})</span>
@@ -1094,7 +1114,6 @@
             </div>
           </div>
 
-          <!-- Section Grid: Top Produk & Metode Pembayaran -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
               <div class="flex items-center justify-between border-b pb-3 border-slate-100">
@@ -1166,7 +1185,6 @@
             </div>
           </div>
 
-          <!-- Rincian Transaksi -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -1224,10 +1242,8 @@
 
       return `
         <div class="space-y-6 animate-fade-in">
-          <!-- Search & Filter Bar -->
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-4 items-center justify-between">
             <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              <!-- Search Input -->
               <div class="relative flex-1 sm:w-64">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                   <i data-lucide="search" class="w-4 h-4"></i>
@@ -1241,7 +1257,6 @@
                 />
               </div>
 
-              <!-- Status Filter Dropdown -->
               <div class="relative">
                 <select 
                   onchange="AppState.txStatus = this.value; AppState.render();"
@@ -1267,7 +1282,6 @@
             </div>
           </div>
 
-          <!-- Transactions Table -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -1536,7 +1550,7 @@
       `;
     }
 
-    function handleAddTxSubmit(e) {
+    async function handleAddTxSubmit(e) {
       e.preventDefault();
       const invoice = document.getElementById('tx-invoice').value.trim();
       const customer = document.getElementById('tx-customer').value.trim();
@@ -1561,9 +1575,16 @@
         created_at: new Date().toISOString()
       };
 
-      AppState.salesRaw.unshift(newTx);
-      localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(AppState.salesRaw));
+      // 1. Simpan langsung di memory state aplikasi
+      AppState.salesRaw = [newTx, ...AppState.salesRaw.filter(x => (x.invoice || x.id) !== invoice)];
+      
+      // 2. Simpan secara permanen di LocalStorage agar tidak terhapus
+      ApiService.saveLocalSales(AppState.salesRaw);
 
+      // 3. Coba kirimkan ke REST API jika API server aktif
+      ApiService.sendTransactionToApi(newTx);
+
+      // 4. Catat aktivitas
       const session = AuthService.getSession();
       if (session) {
         AuthService.logActivity(session.username, `Menambahkan transaksi baru ${invoice} (${formatIDR(total)})`);
@@ -1573,7 +1594,6 @@
       AppState.showToast(`Transaksi ${invoice} berhasil disimpan!`);
     }
 
-    // TAB KHUSUS OWNER: KELOLA AKUN ADMIN
     function renderUserManagementTab(session) {
       if (session.role !== 'Owner') {
         return `
@@ -1604,7 +1624,6 @@
             </button>
           </div>
 
-          <!-- Table Users -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -1745,7 +1764,6 @@
       }
     }
 
-    // Modal Tx Detail
     function renderTxDetailModal() {
       const tx = AppState.selectedTx;
       if (!tx) return '';
@@ -1806,7 +1824,6 @@
       `;
     }
 
-    // Modal Delete Confirm
     function renderDeleteConfirmModal() {
       const tx = AppState.deleteConfirmTx;
       if (!tx) return '';
@@ -1868,11 +1885,11 @@
 
       const invNum = tx.invoice || tx.id;
 
-      // Update state & cache lokal
+      // Update state & simpan pembaruan ke local storage
       AppState.salesRaw = AppState.salesRaw.filter(x => (x.invoice || x.id) !== invNum && x.id !== tx.id);
-      localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(AppState.salesRaw));
+      ApiService.saveLocalSales(AppState.salesRaw);
 
-      // Kirim req DELETE ke API
+      // Kirim DELETE ke API
       await ApiService.deleteSalesData(tx.id || invNum);
 
       // Catat log aktivitas
