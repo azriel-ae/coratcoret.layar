@@ -357,6 +357,7 @@
       selectedDate: new Date().toISOString().slice(0, 10),
 
       addUserModalOpen: false,
+      exitConfirmOpen: false,
 
       txSearch: '',
       txStatus: 'ALL',
@@ -565,6 +566,7 @@
             <div class="pt-4 border-t border-slate-100 flex flex-col items-center">
               <a 
                 href="https://coratcoretlayar.vercel.app" 
+                onclick="return openExitConfirm(event)"
                 class="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-emerald-700 font-semibold rounded-xl text-xs transition border border-slate-200 flex items-center justify-center space-x-2 group"
               >
                 <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:-translate-x-0.5"></i>
@@ -573,6 +575,8 @@
             </div>
           </div>
         </div>
+
+        ${AppState.exitConfirmOpen ? renderExitConfirmModal() : ''}
       `;
     }
 
@@ -677,6 +681,7 @@
 
                 <a 
                   href="https://coratcoretlayar.vercel.app" 
+                  onclick="return openExitConfirm(event)"
                   class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 mt-4 border border-dashed border-slate-200"
                 >
                   <i data-lucide="globe" class="w-4 h-4"></i>
@@ -776,6 +781,7 @@
         ${AppState.selectedTx ? renderTxDetailModal() : ''}
         ${AppState.deleteConfirmTx ? renderDeleteConfirmModal() : ''}
         ${AppState.addUserModalOpen ? renderAddUserModal() : ''}
+        ${AppState.exitConfirmOpen ? renderExitConfirmModal() : ''}
       `;
     }
 
@@ -1827,6 +1833,54 @@
 
     function closeDeleteConfirm() {
       AppState.deleteConfirmTx = null;
+      AppState.render();
+    }
+
+    function renderExitConfirmModal() {
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-slate-200 text-slate-800">
+            <div class="flex items-center space-x-3 text-slate-700">
+              <div class="p-3 bg-slate-100 rounded-2xl border border-slate-200 shrink-0">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Kembali ke Website Utama?</h3>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Apakah kamu yakin ingin kembali ke website utama?
+            </p>
+
+            <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+              <button 
+                onclick="closeExitConfirm()" 
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+              >
+                Tidak
+              </button>
+              <button 
+                onclick="AppState.exitConfirmOpen = false; window.location.href = 'https://coratcoretlayar.vercel.app';" 
+                class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-md transition"
+              >
+                Ya, Yakin
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openExitConfirm(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      AppState.exitConfirmOpen = true;
+      AppState.render();
+      return false;
+    }
+
+    function closeExitConfirm() {
+      AppState.exitConfirmOpen = false;
       AppState.render();
     }
 

@@ -7,6 +7,7 @@
           desc: "Cotton Combed Premium Custom Design",
           subDesc: "Cotton combed berkualitas dengan sablon tajam & lembut.",
           img: "assets/gambar/t-shirt.png",
+          price: 0,
         },
         {
           id: "p2",
@@ -14,6 +15,7 @@
           desc: "Fleece Premium Custom Design",
           subDesc: "Bahan tebal hangat dengan hasil print detail & awet.",
           img: "assets/gambar/hoodie.png",
+          price: 0,
         },
         {
           id: "p3",
@@ -21,6 +23,7 @@
           desc: "Bahan Kain Satin/Satinet Custom Design",
           subDesc: "Bendera komunitas / event dengan warna tajam anti pudar.",
           img: "assets/gambar/flag.png",
+          price: 0,
         },
         {
           id: "p4",
@@ -28,6 +31,7 @@
           desc: "Stiker Vinyl Waterproof Custom Design",
           subDesc: "Vinyl waterproof, die-cut/kiss-cut siap tempel.",
           img: "assets/gambar/sticker.png",
+          price: 0,
         },
         {
           id: "p5",
@@ -35,6 +39,7 @@
           desc: "Kanvas Premium Custom Design",
           subDesc: "Kanvas tebal kuat untuk kebutuhan harian & hobi.",
           img: "assets/gambar/totebag.png",
+          price: 0,
         },
         {
           id: "p6",
@@ -42,6 +47,7 @@
           desc: "Dryfit Sublimation Custom Design",
           subDesc: "Sublimasi full print untuk tim olahraga atau esport.",
           img: "assets/gambar/jersey.png",
+          price: 0,
         },
         {
           id: "p7",
@@ -49,6 +55,7 @@
           desc: "Request Khusus Custom Design Customer",
           subDesc: "Punya ide unik lain? Konsultasikan langsung dengan kami.",
           img: "assets/gambar/lainyya.png",
+          price: 0,
         },
       ];
 
@@ -60,7 +67,26 @@
           localStorage.setItem("ccl_products", JSON.stringify(DEFAULT_PRODUCTS));
           return DEFAULT_PRODUCTS;
         }
-        return JSON.parse(stored);
+
+        let products = JSON.parse(stored);
+
+        // Migrasi data lama: kalau produk yang sudah tersimpan di browser
+        // belum punya field "price" (dibuat sebelum fitur harga ada),
+        // tambahkan otomatis dengan nilai 0 supaya tidak error/undefined.
+        let needsMigration = false;
+        products = products.map((p) => {
+          if (typeof p.price === "undefined") {
+            needsMigration = true;
+            return { ...p, price: 0 };
+          }
+          return p;
+        });
+
+        if (needsMigration) {
+          localStorage.setItem("ccl_products", JSON.stringify(products));
+        }
+
+        return products;
       }
 
       function saveStoredProducts(products) {
@@ -98,7 +124,8 @@
           <div class="product-content">
             <h3 class="product-title">${p.name}</h3>
             <p class="product-desc">${p.subDesc || p.desc}</p>
-            <button class="product-btn" onclick="addToCart('${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.img.replace(/'/g, "\\'")}', this)">
+            ${Number(p.price) > 0 ? `<p class="product-price" style="font-weight:700; color:var(--primary); margin: 4px 0 8px;">Rp ${Number(p.price).toLocaleString("id-ID")}</p>` : ""}
+            <button class="product-btn" onclick="addToCart('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.img.replace(/'/g, "\\'")}', ${Number(p.price) || 0}, this)">
               <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
             </button>
           </div>
@@ -216,6 +243,7 @@
         const name = document.getElementById("pName").value.trim();
         const desc = document.getElementById("pDesc").value.trim();
         const subDesc = document.getElementById("pSubDesc").value.trim();
+        const price = Number(document.getElementById("pPrice").value) || 0;
         let img = document.getElementById("pImgUrl").value.trim();
 
         if (!name || !desc) {
@@ -233,14 +261,14 @@
           // Update Existing Product
           products = products.map((p) => {
             if (p.id === editId) {
-              return { ...p, name, desc, subDesc, img };
+              return { ...p, name, desc, subDesc, img, price };
             }
             return p;
           });
         } else {
           // Add New Product
           const newId = "p_" + Date.now();
-          products.push({ id: newId, name, desc, subDesc, img });
+          products.push({ id: newId, name, desc, subDesc, img, price });
         }
 
         saveStoredProducts(products);
@@ -257,6 +285,7 @@
         document.getElementById("pName").value = target.name;
         document.getElementById("pDesc").value = target.desc;
         document.getElementById("pSubDesc").value = target.subDesc || "";
+        document.getElementById("pPrice").value = target.price || 0;
         document.getElementById("pImgUrl").value = target.img;
         document.getElementById("pImgPreview").src = target.img;
         document.getElementById("pImgPreviewContainer").style.display = "block";
@@ -276,6 +305,7 @@
         document.getElementById("pName").value = "";
         document.getElementById("pDesc").value = "";
         document.getElementById("pSubDesc").value = "";
+        document.getElementById("pPrice").value = "";
         document.getElementById("pImgUrl").value = "";
         document.getElementById("pImgFile").value = "";
         document.getElementById("pImgPreviewContainer").style.display = "none";
@@ -293,6 +323,7 @@
           <td><img src="${p.img}" class="admin-p-img" onerror="this.src='https://placehold.co/100x100/181528/fff?text=IMG'" /></td>
           <td style="font-weight:600;">${p.name}</td>
           <td style="color:var(--text-muted);">${p.desc}</td>
+          <td style="white-space:nowrap; color:var(--text-muted);">Rp ${Number(p.price || 0).toLocaleString("id-ID")}</td>
           <td style="white-space:nowrap;">
             <button class="btn btn-ghost" style="padding:5px 10px; font-size:11px; margin-right:4px;" onclick="editProduct('${p.id}')">
               <i class="fa-solid fa-pen"></i> Edit
@@ -496,12 +527,12 @@
       closeCartBtn.addEventListener("click", closeCart);
       cartOverlay.addEventListener("click", closeCart);
 
-      function addToCart(name, desc, img, btn) {
+      function addToCart(id, name, desc, img, price, btn) {
         const existing = cart.find((item) => item.name === name);
         if (existing) {
           existing.qty += 1;
         } else {
-          cart.push({ name, desc, img, qty: 1 });
+          cart.push({ id, name, desc, img, price: Number(price) || 0, qty: 1 });
         }
 
         if (btn) {
@@ -529,16 +560,22 @@
 
       function renderCart() {
         const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+        const totalPrice = cart.reduce((sum, item) => sum + item.qty * (Number(item.price) || 0), 0);
+        const cartTotalRow = document.getElementById("cartTotalRow");
+        const cartTotalValue = document.getElementById("cartTotalValue");
 
         if (totalItems > 0) {
           cartBadgeCount.style.display = "flex";
           cartBadgeCount.textContent = totalItems;
           cartEmptyMsg.style.display = "none";
           checkoutWaBtn.disabled = false;
+          if (cartTotalRow) cartTotalRow.style.display = "flex";
+          if (cartTotalValue) cartTotalValue.textContent = "Rp " + totalPrice.toLocaleString("id-ID");
         } else {
           cartBadgeCount.style.display = "none";
           cartEmptyMsg.style.display = "block";
           checkoutWaBtn.disabled = true;
+          if (cartTotalRow) cartTotalRow.style.display = "none";
         }
 
         // Render cart DOM items
@@ -570,6 +607,43 @@
         const lines = cart.map((item) => `• ${item.name} (x${item.qty}) - ${item.desc}`);
         const text = `Halo Admin Corat Coret Layar 👋\n\nSaya ingin memesan produk berikut:\n${lines.join("\n")}\n\nMohon info mengenai estimasi pengerjaan & pembayarannya. Terima kasih!`;
 
+        // Catat transaksi ke dashboard /penjualan lewat API (tidak menghambat
+        // proses checkout — kalau gagal/lambat, redirect WhatsApp tetap jalan).
+        kirimTransaksiKeDashboard();
+
         const url = `https://wa.me/6281333385899?text=${encodeURIComponent(text)}`;
         window.open(url, "_blank");
+      }
+
+      // Kirim ringkasan keranjang saat ini sebagai 1 transaksi ke dashboard
+      // penjualan (/api/v1/sales). Karena landing page & dashboard berada di
+      // satu domain Vercel yang sama, cukup panggil path relatif ini.
+      async function kirimTransaksiKeDashboard() {
+        try {
+          const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+          const totalHarga = cart.reduce((sum, item) => sum + item.qty * (Number(item.price) || 0), 0);
+          const productSummary = cart.map((item) => `${item.name} (x${item.qty})`).join(", ");
+
+          const res = await fetch("/api/v1/sales", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customer: "Pelanggan WhatsApp",
+              product: productSummary,
+              qty: totalQty,
+              total: totalHarga,
+              payment_method: "WhatsApp Order",
+              status: "Pending",
+            }),
+          });
+
+          const data = await res.json();
+          if (!data.success) {
+            console.error("Gagal mencatat transaksi ke dashboard:", data.error);
+          }
+        } catch (err) {
+          // Jangan sampai kegagalan pencatatan menghentikan proses checkout
+          // pelanggan — redirect ke WhatsApp tetap harus jalan.
+          console.error("Gagal mencatat transaksi ke dashboard:", err);
+        }
       }
