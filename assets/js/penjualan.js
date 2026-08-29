@@ -1,0 +1,1920 @@
+    const STORAGE_KEYS = {
+      API_URL: 'ccl_api_base_url',
+      USERS: 'ccl_admin_users',
+      SESSION: 'ccl_current_session',
+      ACTIVITY: 'ccl_activity_logs',
+      LOCAL_SALES: 'ccl_local_sales'
+    };
+
+    // Default API Endpoint URL
+    const DEFAULT_API_URL = '/api/v1/sales';
+
+    // Daftar Nama Bulan Bahasa Indonesia
+    const MONTH_NAMES = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    async function hashCredentials(text) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const DEFAULT_OWNER_HASH = '1f1e944743e8d9762fa112f462a6b29d479e00eb23ef52ff2425049537f54c9c';
+
+    function formatIDR(amount) {
+      const numericVal = Number(amount) || 0;
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0
+      }).format(numericVal);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return new Intl.DateTimeFormat('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(date);
+      } catch (e) {
+        return '-';
+      }
+    }
+
+    function renderStatusBadge(status) {
+      const s = (status || 'Completed').toString().toLowerCase();
+      if (s.includes('completed') || s.includes('lunas') || s.includes('sukses')) {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Selesai
+                </span>`;
+      } else if (s.includes('pending') || s.includes('proses') || s.includes('menunggu')) {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span> Pending
+                </span>`;
+      } else {
+        return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                  <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500"></span> Dibatalkan
+                </span>`;
+      }
+    }
+
+    const AuthService = {
+      getSession() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSION) || 'null');
+        } catch (e) {
+          return null;
+        }
+      },
+
+      setSession(session) {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+      },
+
+      clearSession() {
+        localStorage.removeItem(STORAGE_KEYS.SESSION);
+      },
+
+      getUsers() {
+        try {
+          const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+          if (users.length === 0) {
+            const defaultOwner = [{
+              username: 'admin',
+              name: 'Owner CCL',
+              role: 'Owner',
+              authHash: DEFAULT_OWNER_HASH,
+              createdAt: new Date().toISOString()
+            }];
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultOwner));
+            return defaultOwner;
+          }
+          return users;
+        } catch (e) {
+          return [];
+        }
+      },
+
+      async login(username, password) {
+        const cleanUser = (username || '').trim().toLowerCase();
+        const inputHash = await hashCredentials(cleanUser + ':' + password);
+        const users = this.getUsers();
+
+        const foundUser = users.find(u => u.username.toLowerCase() === cleanUser);
+        const isDefaultOwnerAdmin = (cleanUser === 'admin' && password === '123');
+
+        if (foundUser && (foundUser.authHash === inputHash || isDefaultOwnerAdmin || (foundUser.username === 'admin' && inputHash === DEFAULT_OWNER_HASH))) {
+          if (isDefaultOwnerAdmin && foundUser.authHash !== inputHash) {
+            foundUser.authHash = inputHash;
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+          }
+
+          const session = {
+            username: foundUser.username,
+            name: foundUser.name,
+            role: foundUser.role,
+            loginAt: new Date().toISOString()
+          };
+          this.setSession(session);
+          this.logActivity(foundUser.username, `Berhasil masuk ke dashboard (${foundUser.role})`);
+          return { success: true };
+        }
+        return { success: false, message: 'Username atau Password salah!' };
+      },
+
+      async createUser(newUserData) {
+        const users = this.getUsers();
+        const cleanUsername = newUserData.username.trim().toLowerCase();
+
+        if (users.some(u => u.username.toLowerCase() === cleanUsername)) {
+          return { success: false, message: 'Username sudah digunakan!' };
+        }
+
+        const authHash = await hashCredentials(cleanUsername + ':' + newUserData.password);
+        const newUser = {
+          username: cleanUsername,
+          name: newUserData.name.trim(),
+          role: newUserData.role || 'Admin',
+          authHash,
+          createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+        const current = this.getSession();
+        this.logActivity(current?.username || 'Owner', `Membuat akun ${newUser.role} baru: ${newUser.username}`);
+        return { success: true };
+      },
+
+      deleteUser(username) {
+        let users = this.getUsers();
+        const target = users.find(u => u.username === username);
+        if (!target) return { success: false, message: 'Pengguna tidak ditemukan' };
+        if (target.role === 'Owner') return { success: false, message: 'Akun Owner utama tidak dapat dihapus!' };
+
+        users = users.filter(u => u.username !== username);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+        const current = this.getSession();
+        this.logActivity(current?.username || 'Owner', `Menghapus akun admin: ${username}`);
+        return { success: true };
+      },
+
+      logout() {
+        const current = this.getSession();
+        if (current) {
+          this.logActivity(current.username, 'Keluar dari dashboard');
+        }
+        this.clearSession();
+        AppState.render();
+      },
+
+      logActivity(username, action) {
+        try {
+          const logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY) || '[]');
+          logs.unshift({
+            id: 'LOG-' + Date.now(),
+            username,
+            action,
+            timestamp: new Date().toISOString()
+          });
+          localStorage.setItem(STORAGE_KEYS.ACTIVITY, JSON.stringify(logs.slice(0, 100)));
+        } catch (e) {
+          console.error('Error logging activity:', e);
+        }
+      },
+
+      getActivityLogs() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY) || '[]');
+        } catch (e) {
+          return [];
+        }
+      }
+    };
+
+    const ApiService = {
+      getApiUrl() {
+        return localStorage.getItem(STORAGE_KEYS.API_URL) || DEFAULT_API_URL;
+      },
+
+      setApiUrl(url) {
+        localStorage.setItem(STORAGE_KEYS.API_URL, url);
+      },
+
+      // Helper untuk mengambil transaksi lokal yang tersimpan
+      getLocalSales() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_SALES) || '[]');
+        } catch (e) {
+          return [];
+        }
+      },
+
+      // Helper untuk menyimpan data transaksi secara permanen ke LocalStorage
+      saveLocalSales(sales) {
+        try {
+          localStorage.setItem(STORAGE_KEYS.LOCAL_SALES, JSON.stringify(sales));
+        } catch (e) {
+          console.error('Gagal menyimpan transaksi lokal:', e);
+        }
+      },
+
+      // Menggabungkan data dari API dengan data lokal tanpa menghapus transaksi baru yang belum disinkron
+      mergeSalesData(apiSales, localSales) {
+        const map = new Map();
+        
+        // Utamakan data lokal terlebih dahulu
+        (localSales || []).forEach(item => {
+          const key = (item.invoice || item.id || '').toString();
+          if (key) map.set(key, item);
+        });
+
+        // Masukkan / perbarui dengan data dari API
+        (apiSales || []).forEach(item => {
+          const key = (item.invoice || item.id || '').toString();
+          if (key) {
+            // Gabungkan properti jika sudah ada, atau tambahkan jika baru
+            const existing = map.get(key) || {};
+            map.set(key, { ...existing, ...item });
+          }
+        });
+
+        return Array.from(map.values()).sort((a, b) => {
+          const dateA = new Date(a.date || a.created_at || 0);
+          const dateB = new Date(b.date || b.created_at || 0);
+          return dateB - dateA;
+        });
+      },
+
+      async fetchSalesData() {
+        const cachedSales = this.getLocalSales();
+
+        try {
+          const baseUrl = this.getApiUrl();
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+          const endpoint = baseUrl.endsWith('/v1/sales') || baseUrl.includes('/v1/sales')
+            ? baseUrl
+            : `${baseUrl.replace(/\/$/, '')}/v1/sales`;
+          const separator = endpoint.includes('?') ? '&' : '?';
+
+          const res = await fetch(`${endpoint}${separator}_t=${Date.now()}`, {
+            signal: controller.signal,
+            cache: 'no-store'
+          });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            const apiSales = Array.isArray(data) ? data : (data?.data || data?.sales || []);
+
+            // PERBAIKAN UTAMA: Gabungkan data dari API dengan data lokal (TIDAK MENIMPA HILANG)
+            const mergedSales = this.mergeSalesData(apiSales, cachedSales);
+            this.saveLocalSales(mergedSales);
+
+            AppState.apiConnectionStatus = {
+              success: true,
+              message: `Terhubung ke API — ${mergedSales.length} transaksi dimuat (${apiSales.length} server, ${cachedSales.length} lokal)`
+            };
+            return mergedSales;
+          }
+          throw new Error(`HTTP ${res.status}: ${res.statusText || 'Gagal memuat API'}`);
+        } catch (error) {
+          // Jika API Server offline / offline mode, gunakan data tersimpan di LocalStorage
+          AppState.apiConnectionStatus = {
+            success: false,
+            message: `Mode Penyimpanan Lokal (${cachedSales.length} transaksi tersimpan)`
+          };
+          return cachedSales;
+        }
+      },
+
+      async sendTransactionToApi(txData) {
+        try {
+          const baseUrl = this.getApiUrl();
+          const endpoint = baseUrl.endsWith('/v1/sales') || baseUrl.includes('/v1/sales')
+            ? baseUrl
+            : `${baseUrl.replace(/\/$/, '')}/v1/sales`;
+
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(txData)
+          });
+          return res.ok;
+        } catch (e) {
+          console.warn('API POST warn (tersimpan di lokal):', e);
+          return false;
+        }
+      },
+
+      async deleteSalesData(id) {
+        try {
+          const baseUrl = this.getApiUrl();
+          const endpoint = baseUrl.endsWith('/v1/sales') || baseUrl.includes('/v1/sales')
+            ? baseUrl
+            : `${baseUrl.replace(/\/$/, '')}/v1/sales`;
+          const separator = endpoint.includes('?') ? '&' : '?';
+
+          const res = await fetch(`${endpoint}${separator}id=${encodeURIComponent(id)}`, {
+            method: 'DELETE'
+          });
+          return { success: res.ok };
+        } catch (error) {
+          console.warn('API delete warning:', error);
+          return { success: false, error: error.message };
+        }
+      }
+    };
+
+    const AppState = {
+      activeTab: 'dashboard',
+      salesRaw: [],
+      loading: false,
+      apiError: null,
+      lastUpdated: null,
+      apiConnectionStatus: { success: false, message: 'Belum dicek' },
+      mobileMenuOpen: false,
+
+      toastMessage: null,
+
+      rekapMode: 'month',
+      selectedYear: new Date().getFullYear(),
+      selectedMonth: new Date().getMonth(),
+      selectedDate: new Date().toISOString().slice(0, 10),
+
+      addUserModalOpen: false,
+
+      txSearch: '',
+      txStatus: 'ALL',
+      selectedTx: null,
+      deleteConfirmTx: null,
+
+      txModalOpen: false,
+
+      getFilteredTransactions() {
+        const search = (this.txSearch || '').toLowerCase();
+        const statusFilter = this.txStatus || 'ALL';
+
+        return this.salesRaw.filter(tx => {
+          const inv = (tx.invoice || tx.id || '').toLowerCase();
+          const cust = (tx.customer || '').toLowerCase();
+          const prod = (tx.product || tx.items || '').toLowerCase();
+          const matchesSearch = !search || inv.includes(search) || cust.includes(search) || prod.includes(search);
+
+          const s = (tx.status || 'Completed').toLowerCase();
+          let matchesStatus = true;
+          if (statusFilter === 'COMPLETED') matchesStatus = s.includes('completed') || s.includes('lunas') || s.includes('sukses');
+          else if (statusFilter === 'PENDING') matchesStatus = s.includes('pending') || s.includes('proses');
+          else if (statusFilter === 'CANCELLED') matchesStatus = s.includes('cancel') || s.includes('batal');
+
+          return matchesSearch && matchesStatus;
+        });
+      },
+
+      getPeriodSales() {
+        const selYear = Number(this.selectedYear);
+        const selMonth = Number(this.selectedMonth);
+        const selDate = this.selectedDate;
+
+        return this.salesRaw.filter(tx => {
+          const d = new Date(tx.date || tx.created_at);
+          if (isNaN(d.getTime())) return false;
+
+          if (this.rekapMode === 'date') {
+            const dateStr = d.toISOString().slice(0, 10);
+            return dateStr === selDate;
+          } else {
+            return d.getFullYear() === selYear && d.getMonth() === selMonth;
+          }
+        });
+      },
+
+      async loadData() {
+        this.loading = true;
+        this.render();
+
+        try {
+          // Ambil data dari API dan gabungkan secara aman dengan data lokal
+          const sales = await ApiService.fetchSalesData();
+          this.salesRaw = sales || [];
+          this.lastUpdated = new Date().toISOString();
+          this.apiError = null;
+        } catch (err) {
+          this.apiError = 'Gagal memuat data otomatis. Menampilkan data tersimpan di lokal.';
+          this.salesRaw = ApiService.getLocalSales();
+        } finally {
+          this.loading = false;
+          this.render();
+        }
+      },
+
+      showToast(msg) {
+        this.toastMessage = msg;
+        this.render();
+        setTimeout(() => {
+          this.toastMessage = null;
+          this.render();
+        }, 3500);
+      },
+
+      render() {
+        const appContainer = document.getElementById('app');
+        if (!appContainer) return;
+
+        const session = AuthService.getSession();
+
+        if (!session) {
+          appContainer.innerHTML = renderLoginScreen();
+        } else {
+          appContainer.innerHTML = renderDashboardScreen(session);
+        }
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }
+    };
+
+    function computeMetrics(sales) {
+      if (!Array.isArray(sales) || sales.length === 0) {
+        return {
+          totalOmzet: 0,
+          totalTxCount: 0,
+          completedCount: 0,
+          pendingCount: 0,
+          avgTxValue: 0,
+          todayOmzet: 0
+        };
+      }
+
+      const nowStr = new Date().toISOString().slice(0, 10);
+
+      let totalOmzet = 0;
+      let totalTxCount = sales.length;
+      let completedCount = 0;
+      let pendingCount = 0;
+      let todayOmzet = 0;
+
+      sales.forEach(tx => {
+        const amount = Number(tx.total || tx.amount || tx.price || 0);
+        const status = (tx.status || 'Completed').toLowerCase();
+        const dateStr = (tx.date || tx.created_at || '').slice(0, 10);
+
+        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses')) {
+          totalOmzet += amount;
+          completedCount++;
+          if (dateStr === nowStr) {
+            todayOmzet += amount;
+          }
+        } else if (status.includes('pending') || status.includes('proses')) {
+          pendingCount++;
+        }
+      });
+
+      const avgTxValue = completedCount > 0 ? totalOmzet / completedCount : 0;
+
+      return {
+        totalOmzet,
+        totalTxCount,
+        completedCount,
+        pendingCount,
+        avgTxValue,
+        todayOmzet
+      };
+    }
+
+    function renderLoginScreen() {
+      return `
+        <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+          <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+          <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+
+          <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl border border-slate-200 z-10 space-y-6 animate-fade-in">
+            <div class="text-center space-y-3">
+              <div class="w-14 h-14 bg-emerald-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-50">
+                <i data-lucide="layers" class="w-7 h-7"></i>
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Corat Coret Layar</h1>
+                <p class="text-xs text-slate-500 mt-1 font-medium">Dashboard Rekapitulasi & Penjualan</p>
+              </div>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+              <div id="login-error" class="hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs flex items-center space-x-2.5">
+                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-rose-600"></i>
+                <span id="login-error-text">Username atau Password salah!</span>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-700">Username</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    id="input-username" 
+                    placeholder="Masukkan username" 
+                    required 
+                    autocomplete="username"
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-700">Password</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="password" 
+                    id="input-password" 
+                    placeholder="Masukkan password" 
+                    required 
+                    autocomplete="current-password"
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-600/20 transition active:scale-[0.99] flex items-center justify-center space-x-2 mt-2"
+              >
+                <span>Masuk Ke Dashboard</span>
+              </button>
+            </form>
+
+            <div class="pt-4 border-t border-slate-100 flex flex-col items-center">
+              <a 
+                href="https://coratcoretlayar.vercel.app" 
+                class="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-emerald-700 font-semibold rounded-xl text-xs transition border border-slate-200 flex items-center justify-center space-x-2 group"
+              >
+                <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:-translate-x-0.5"></i>
+                <span>Kembali ke Website Utama</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('input-username').value;
+      const password = document.getElementById('input-password').value;
+
+      const res = await AuthService.login(username, password);
+      if (res.success) {
+        AppState.loadData();
+      } else {
+        const errBox = document.getElementById('login-error');
+        const errText = document.getElementById('login-error-text');
+        if (errBox && errText) {
+          errText.textContent = res.message;
+          errBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function renderDashboardScreen(session) {
+      const metrics = computeMetrics(AppState.salesRaw);
+
+      return `
+        <div class="flex-1 flex flex-col md:flex-row min-h-screen bg-slate-50 text-slate-800">
+          <!-- Sidebar Navigation -->
+          <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200/90 flex flex-col justify-between shrink-0 shadow-xs z-30">
+            <div>
+              <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold shadow-md shadow-emerald-600/20 shrink-0">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h1 class="font-extrabold text-slate-900 text-sm tracking-tight">Corat Coret Layar</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Rekap & Kasir Penjualan</p>
+                  </div>
+                </div>
+
+                <button 
+                  onclick="AppState.mobileMenuOpen = !AppState.mobileMenuOpen; AppState.render();"
+                  class="md:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+                >
+                  <i data-lucide="${AppState.mobileMenuOpen ? 'x' : 'menu'}" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <nav class="${AppState.mobileMenuOpen ? 'block' : 'hidden'} md:block p-3 space-y-1 text-xs font-semibold">
+                <button 
+                  onclick="AppState.activeTab='dashboard'; AppState.mobileMenuOpen=false; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'dashboard' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                >
+                  <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                  <span>Ringkasan Dashboard</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='rekap'; AppState.mobileMenuOpen=false; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'rekap' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                >
+                  <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                  <span>Rekap Penjualan</span>
+                  <span class="ml-auto bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">Periode</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='transactions'; AppState.mobileMenuOpen=false; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'transactions' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                >
+                  <i data-lucide="receipt" class="w-4 h-4"></i>
+                  <span>Data Transaksi</span>
+                  <span class="ml-auto bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-md font-mono border border-slate-200">${AppState.salesRaw.length}</span>
+                </button>
+
+                ${session.role === 'Owner' ? `
+                  <button 
+                    onclick="AppState.activeTab='users'; AppState.mobileMenuOpen=false; AppState.render();"
+                    class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'users' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                  >
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Kelola Admin</span>
+                    <span class="ml-auto bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">Owner</span>
+                  </button>
+                ` : ''}
+
+                <button 
+                  onclick="AppState.activeTab='activity'; AppState.mobileMenuOpen=false; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'activity' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                >
+                  <i data-lucide="history" class="w-4 h-4"></i>
+                  <span>Log Aktivitas</span>
+                </button>
+
+                <button 
+                  onclick="AppState.activeTab='settings'; AppState.mobileMenuOpen=false; AppState.render();"
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition ${AppState.activeTab === 'settings' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'}"
+                >
+                  <i data-lucide="sliders" class="w-4 h-4"></i>
+                  <span>Pengaturan API</span>
+                </button>
+
+                <a 
+                  href="https://coratcoretlayar.vercel.app" 
+                  class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl transition text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 mt-4 border border-dashed border-slate-200"
+                >
+                  <i data-lucide="globe" class="w-4 h-4"></i>
+                  <span>Ke Website Utama</span>
+                  <i data-lucide="external-link" class="w-3 h-3 ml-auto text-slate-400"></i>
+                </a>
+              </nav>
+            </div>
+
+            <div class="${AppState.mobileMenuOpen ? 'block' : 'hidden'} md:block p-4 border-t border-slate-100 bg-slate-50/50">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 border border-emerald-200 text-xs">
+                    ${session.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="truncate">
+                    <p class="text-xs font-bold text-slate-900 truncate">${session.name || session.username}</p>
+                    <p class="text-[10px] text-slate-500 capitalize">${session.role}</p>
+                  </div>
+                </div>
+
+                <button 
+                  onclick="AuthService.logout()" 
+                  title="Keluar Sesi"
+                  class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                >
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content Area -->
+          <main class="flex-1 flex flex-col bg-slate-50 overflow-y-auto">
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20 shadow-xs">
+              <div>
+                <h2 class="text-base font-bold text-slate-900 capitalize flex items-center space-x-2">
+                  <span>${getTabTitle(AppState.activeTab)}</span>
+                </h2>
+                <div class="flex items-center space-x-2 mt-0.5">
+                  <span class="inline-flex items-center text-[11px] text-slate-500">
+                    Update Terakhir: ${AppState.lastUpdated ? formatDate(AppState.lastUpdated) : 'Belum pernah'}
+                  </span>
+                  <span class="text-slate-300">•</span>
+                  <span class="inline-flex items-center text-[11px] font-medium ${AppState.apiConnectionStatus.success ? 'text-emerald-700' : 'text-slate-600'}">
+                    <span class="w-1.5 h-1.5 rounded-full ${AppState.apiConnectionStatus.success ? 'bg-emerald-500' : 'bg-slate-400'} mr-1.5 animate-pulse"></span>
+                    ${AppState.apiConnectionStatus.message}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2.5">
+                <button 
+                  onclick="AppState.loadData()" 
+                  class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl flex items-center space-x-1.5 transition border border-slate-200 shadow-2xs"
+                >
+                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5 ${AppState.loading ? 'animate-spin text-emerald-600' : ''}"></i>
+                  <span>Refresh</span>
+                </button>
+
+                <button 
+                  onclick="openAddTxModal()" 
+                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 shadow-md shadow-emerald-600/20 transition active:scale-95"
+                >
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Transaksi Baru</span>
+                </button>
+              </div>
+            </header>
+
+            ${AppState.toastMessage ? `
+              <div class="mx-6 mt-4 p-3.5 bg-emerald-600 text-white rounded-xl text-xs shadow-lg flex items-center justify-between animate-fade-in">
+                <div class="flex items-center space-x-2.5">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                  <span class="font-medium">${AppState.toastMessage}</span>
+                </div>
+              </div>
+            ` : ''}
+
+            ${AppState.apiError ? `
+              <div class="mx-6 mt-4 p-3.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                  <span>${AppState.apiError}</span>
+                </div>
+                <button onclick="AppState.apiError=null; AppState.render();" class="text-amber-700 font-bold hover:underline text-[11px]">Tutup</button>
+              </div>
+            ` : ''}
+
+            <div class="p-6 flex-1 space-y-6">
+              ${renderActiveTabContent(session, metrics)}
+            </div>
+          </main>
+        </div>
+
+        ${AppState.txModalOpen ? renderAddTxModal() : ''}
+        ${AppState.selectedTx ? renderTxDetailModal() : ''}
+        ${AppState.deleteConfirmTx ? renderDeleteConfirmModal() : ''}
+        ${AppState.addUserModalOpen ? renderAddUserModal() : ''}
+      `;
+    }
+
+    function getTabTitle(tab) {
+      switch (tab) {
+        case 'rekap': return 'Rekap Penjualan Bulanan & Harian';
+        case 'transactions': return 'Data Transaksi Penjualan';
+        case 'users': return 'Kelola Akun Admin & Hak Akses';
+        case 'activity': return 'Log Aktivitas Administrator';
+        case 'settings': return 'Pengaturan API & Endpoint';
+        case 'dashboard': default: return 'Ringkasan Dashboard Penjualan';
+      }
+    }
+
+    function renderActiveTabContent(session, metrics) {
+      switch (AppState.activeTab) {
+        case 'rekap':
+          return renderMonthlySalesRecapTab();
+        case 'transactions':
+          return renderTransactionsTab();
+        case 'users':
+          return renderUserManagementTab(session);
+        case 'activity':
+          return renderActivityTab();
+        case 'settings':
+          return renderSettingsTab();
+        case 'dashboard':
+        default:
+          return renderDashboardSummaryTab(metrics);
+      }
+    }
+
+    function renderDashboardSummaryTab(metrics) {
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Total Omzet Penjualan</span>
+                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                  <i data-lucide="wallet" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div>
+                <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.totalOmzet)}</p>
+                <p class="text-[11px] text-slate-500 mt-1 font-medium">Status Lunas & Sukses</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Total Transaksi</span>
+                <div class="p-2.5 bg-teal-50 text-teal-600 rounded-xl border border-teal-100">
+                  <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div>
+                <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${metrics.totalTxCount}</p>
+                <p class="text-[11px] text-slate-500 mt-1 font-medium">${metrics.completedCount} Selesai, ${metrics.pendingCount} Pending</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Rata-rata Order</span>
+                <div class="p-2.5 bg-slate-100 text-slate-700 rounded-xl border border-slate-200">
+                  <i data-lucide="trending-up" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div>
+                <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.avgTxValue)}</p>
+                <p class="text-[11px] text-slate-500 mt-1 font-medium">Per Transaksi Selesai</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500">Omzet Hari Ini</span>
+                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl border border-amber-100">
+                  <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+              </div>
+              <div>
+                <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(metrics.todayOmzet)}</p>
+                <p class="text-[11px] text-slate-500 mt-1 font-medium">Tanggal ${new Date().toLocaleDateString('id-ID')}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Transaksi Terbaru</h3>
+                <p class="text-xs text-slate-500">Daftar transaksi terkini dari sistem kasir/checkout Corat Coret Layar</p>
+              </div>
+              <button 
+                onclick="AppState.activeTab='transactions'; AppState.render();" 
+                class="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center space-x-1"
+              >
+                <span>Lihat Semua</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Invoice</th>
+                    <th class="py-3.5 px-4">Tanggal</th>
+                    <th class="py-3.5 px-4">Pelanggan</th>
+                    <th class="py-3.5 px-4">Produk</th>
+                    <th class="py-3.5 px-4">Total</th>
+                    <th class="py-3.5 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${AppState.salesRaw.length === 0 ? `
+                    <tr>
+                      <td colspan="6" class="py-12 text-center text-slate-400">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Belum ada data transaksi. Klik <strong>"Transaksi Baru"</strong> untuk menginput penjualan.
+                      </td>
+                    </tr>
+                  ` : AppState.salesRaw.slice(0, 5).map(tx => `
+                    <tr class="hover:bg-slate-50/80 cursor-pointer transition" onclick="openTxDetail('${tx.invoice || tx.id}')">
+                      <td class="py-3.5 px-4 font-mono font-bold text-emerald-700">${tx.invoice || tx.id}</td>
+                      <td class="py-3.5 px-4 text-slate-500">${formatDate(tx.date || tx.created_at)}</td>
+                      <td class="py-3.5 px-4 font-semibold text-slate-800">${tx.customer || 'Pelanggan Umum'}</td>
+                      <td class="py-3.5 px-4 text-slate-600">${tx.product || tx.items || 'Layanan Cetak'}</td>
+                      <td class="py-3.5 px-4 font-extrabold text-slate-900 font-mono">${formatIDR(tx.total || tx.amount || 0)}</td>
+                      <td class="py-3.5 px-4">${renderStatusBadge(tx.status)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMonthlySalesRecapTab() {
+      const yearsSet = new Set();
+      yearsSet.add(new Date().getFullYear());
+      AppState.salesRaw.forEach(tx => {
+        const d = new Date(tx.date || tx.created_at || Date.now());
+        if (!isNaN(d.getFullYear())) yearsSet.add(d.getFullYear());
+      });
+      const availableYears = Array.from(yearsSet).sort((a,b) => b - a);
+
+      const selYear = Number(AppState.selectedYear);
+      const selMonth = Number(AppState.selectedMonth);
+      const selDate = AppState.selectedDate;
+
+      const periodSales = AppState.getPeriodSales();
+
+      let totalOmzetBulan = 0;
+      let completedCountBulan = 0;
+      let pendingCountBulan = 0;
+      let totalQtyBulan = 0;
+
+      const productStats = {};
+      const paymentStats = {};
+
+      periodSales.forEach(tx => {
+        const amount = Number(tx.total || tx.amount || 0);
+        const qty = Number(tx.qty || 1);
+        const status = (tx.status || 'Completed').toLowerCase();
+        const prodName = tx.product || tx.items || 'Layanan Cetak';
+        const payMethod = tx.payment_method || 'QRIS';
+
+        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses')) {
+          totalOmzetBulan += amount;
+          completedCountBulan++;
+          totalQtyBulan += qty;
+
+          if (!productStats[prodName]) productStats[prodName] = { qty: 0, omzet: 0 };
+          productStats[prodName].qty += qty;
+          productStats[prodName].omzet += amount;
+
+          if (!paymentStats[payMethod]) paymentStats[payMethod] = { count: 0, omzet: 0 };
+          paymentStats[payMethod].count++;
+          paymentStats[payMethod].omzet += amount;
+        } else if (status.includes('pending') || status.includes('proses')) {
+          pendingCountBulan++;
+        }
+      });
+
+      const avgOrderBulan = completedCountBulan > 0 ? totalOmzetBulan / completedCountBulan : 0;
+      const sortedProducts = Object.entries(productStats).sort((a,b) => b[1].omzet - a[1].omzet);
+
+      const periodLabel = AppState.rekapMode === 'date' 
+        ? `Tanggal ${formatDate(selDate).split(',')[0]}` 
+        : `${MONTH_NAMES[selMonth]} ${selYear}`;
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-4 items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Pilih Periode Rekap Penjualan</h3>
+              <p class="text-xs text-slate-500">Filter berdasarkan bulan atau tanggal spesifik</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="bg-slate-100 p-1 rounded-xl flex items-center space-x-1 text-xs font-semibold">
+                <button 
+                  onclick="AppState.rekapMode='month'; AppState.render();" 
+                  class="px-3 py-1.5 rounded-lg transition ${AppState.rekapMode === 'month' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}"
+                >
+                  Per Bulan
+                </button>
+                <button 
+                  onclick="AppState.rekapMode='date'; AppState.render();" 
+                  class="px-3 py-1.5 rounded-lg transition ${AppState.rekapMode === 'date' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}"
+                >
+                  Per Tanggal
+                </button>
+              </div>
+
+              ${AppState.rekapMode === 'month' ? `
+                <div class="relative">
+                  <select 
+                    onchange="AppState.selectedMonth = parseInt(this.value); AppState.render();"
+                    class="pl-3.5 pr-8 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition appearance-none cursor-pointer"
+                  >
+                    ${MONTH_NAMES.map((name, index) => `
+                      <option value="${index}" ${selMonth === index ? 'selected' : ''}>${name}</option>
+                    `).join('')}
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+
+                <div class="relative">
+                  <select 
+                    onchange="AppState.selectedYear = parseInt(this.value); AppState.render();"
+                    class="pl-3.5 pr-8 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition appearance-none cursor-pointer"
+                  >
+                    ${availableYears.map(yr => `
+                      <option value="${yr}" ${selYear === yr ? 'selected' : ''}>${yr}</option>
+                    `).join('')}
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+              ` : `
+                <input 
+                  type="date" 
+                  value="${selDate}" 
+                  onchange="AppState.selectedDate = this.value; AppState.render();" 
+                  class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-800 font-mono rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              `}
+
+              <button 
+                onclick="exportPeriodSales()" 
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+              >
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Export Laporan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md space-y-2 relative overflow-hidden">
+              <span class="text-xs font-semibold text-emerald-100">Total Omzet (${periodLabel})</span>
+              <p class="text-2xl font-extrabold font-mono tracking-tight">${formatIDR(totalOmzetBulan)}</p>
+              <p class="text-[11px] text-emerald-100 font-medium">${completedCountBulan} Transaksi Sukses</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+              <span class="text-xs font-semibold text-slate-500">Jumlah Produk Terjual</span>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${totalQtyBulan} <span class="text-xs text-slate-500 font-normal">item</span></p>
+              <p class="text-[11px] text-slate-500 font-medium">Terhitung dari pesanan lunas</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+              <span class="text-xs font-semibold text-slate-500">Rata-rata Order</span>
+              <p class="text-2xl font-extrabold text-slate-900 font-mono tracking-tight">${formatIDR(avgOrderBulan)}</p>
+              <p class="text-[11px] text-slate-500 font-medium">Per transaksi periode ini</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+              <span class="text-xs font-semibold text-slate-500">Transaksi Pending</span>
+              <p class="text-2xl font-extrabold text-amber-600 font-mono tracking-tight">${pendingCountBulan} <span class="text-xs text-slate-500 font-normal">pesanan</span></p>
+              <p class="text-[11px] text-slate-500 font-medium">Menunggu pelunasan</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+              <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <i data-lucide="trophy" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Produk Terlaris (${periodLabel})</span>
+                </h3>
+                <span class="text-xs text-slate-500 font-medium">${sortedProducts.length} Kategori Produk</span>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                    <tr>
+                      <th class="py-2.5 px-3">Nama Produk / Jasa</th>
+                      <th class="py-2.5 px-3 text-center">Qty Terjual</th>
+                      <th class="py-2.5 px-3 text-right">Total Omzet</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${sortedProducts.length === 0 ? `
+                      <tr>
+                        <td colspan="3" class="py-8 text-center text-slate-400">
+                          Tidak ada data penjualan produk pada periode ini.
+                        </td>
+                      </tr>
+                    ` : sortedProducts.map(([pName, pStat]) => `
+                      <tr>
+                        <td class="py-3 px-3 font-semibold text-slate-800">${pName}</td>
+                        <td class="py-3 px-3 text-center font-mono font-medium text-slate-600">${pStat.qty}</td>
+                        <td class="py-3 px-3 text-right font-bold text-emerald-700 font-mono">${formatIDR(pStat.omzet)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+              <div class="border-b pb-3 border-slate-100">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Metode Pembayaran</span>
+                </h3>
+              </div>
+
+              <div class="space-y-3">
+                ${Object.keys(paymentStats).length === 0 ? `
+                  <p class="text-xs text-slate-400 text-center py-6">Belum ada transaksi pada periode ini.</p>
+                ` : Object.entries(paymentStats).map(([method, stat]) => {
+                  const percentage = totalOmzetBulan > 0 ? Math.round((stat.omzet / totalOmzetBulan) * 100) : 0;
+                  return `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
+                      <div class="flex justify-between text-xs font-bold text-slate-800">
+                        <span>${method}</span>
+                        <span class="font-mono text-emerald-700">${formatIDR(stat.omzet)}</span>
+                      </div>
+                      <div class="w-full bg-slate-200 rounded-full h-1.5">
+                        <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                      </div>
+                      <div class="flex justify-between text-[10px] text-slate-500 font-medium">
+                        <span>${stat.count} Transaksi</span>
+                        <span>${percentage}% dari Total</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Daftar Transaksi ${periodLabel}</h3>
+                <p class="text-xs text-slate-500">Rincian seluruh transaksi penjualan periode terpilih</p>
+              </div>
+              <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-lg font-mono font-bold">${periodSales.length} data</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Invoice</th>
+                    <th class="py-3.5 px-4">Tanggal</th>
+                    <th class="py-3.5 px-4">Pelanggan</th>
+                    <th class="py-3.5 px-4">Produk</th>
+                    <th class="py-3.5 px-4">Qty</th>
+                    <th class="py-3.5 px-4">Total</th>
+                    <th class="py-3.5 px-4">Metode</th>
+                    <th class="py-3.5 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${periodSales.length === 0 ? `
+                    <tr>
+                      <td colspan="8" class="py-12 text-center text-slate-400">
+                        <i data-lucide="calendar-x" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Tidak ada transaksi tercatat untuk ${periodLabel}.
+                      </td>
+                    </tr>
+                  ` : periodSales.map(tx => `
+                    <tr class="hover:bg-slate-50 cursor-pointer transition" onclick="openTxDetail('${tx.invoice || tx.id}')">
+                      <td class="py-3.5 px-4 font-mono font-bold text-emerald-700">${tx.invoice || tx.id}</td>
+                      <td class="py-3.5 px-4 text-slate-500">${formatDate(tx.date || tx.created_at)}</td>
+                      <td class="py-3.5 px-4 font-semibold text-slate-800">${tx.customer || 'Pelanggan Umum'}</td>
+                      <td class="py-3.5 px-4 text-slate-600">${tx.product || tx.items || 'Layanan Cetak'}</td>
+                      <td class="py-3.5 px-4 text-slate-600 font-mono">${tx.qty || 1}</td>
+                      <td class="py-3.5 px-4 font-extrabold text-slate-900 font-mono">${formatIDR(tx.total || tx.amount || 0)}</td>
+                      <td class="py-3.5 px-4 text-slate-600">${tx.payment_method || 'QRIS'}</td>
+                      <td class="py-3.5 px-4">${renderStatusBadge(tx.status)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTransactionsTab() {
+      const statusFilter = AppState.txStatus || 'ALL';
+      const filtered = AppState.getFilteredTransactions();
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div class="relative flex-1 sm:w-64">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input 
+                  type="text" 
+                  value="${AppState.txSearch}" 
+                  oninput="AppState.txSearch = this.value; AppState.render();" 
+                  placeholder="Cari Invoice / Pelanggan / Produk..." 
+                  class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder:text-slate-400"
+                />
+              </div>
+
+              <div class="relative">
+                <select 
+                  onchange="AppState.txStatus = this.value; AppState.render();"
+                  class="pl-3.5 pr-8 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL" ${statusFilter === 'ALL' ? 'selected' : ''}>Semua Status</option>
+                  <option value="COMPLETED" ${statusFilter === 'COMPLETED' ? 'selected' : ''}>Selesai / Lunas</option>
+                  <option value="PENDING" ${statusFilter === 'PENDING' ? 'selected' : ''}>Pending</option>
+                  <option value="CANCELLED" ${statusFilter === 'CANCELLED' ? 'selected' : ''}>Dibatalkan</option>
+                </select>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button 
+                onclick="exportFilteredTransactions()" 
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+              >
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Export Data (${filtered.length})</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Invoice</th>
+                    <th class="py-3.5 px-4">Tanggal & Waktu</th>
+                    <th class="py-3.5 px-4">Pelanggan</th>
+                    <th class="py-3.5 px-4">Produk / Layanan</th>
+                    <th class="py-3.5 px-4">Qty</th>
+                    <th class="py-3.5 px-4">Total</th>
+                    <th class="py-3.5 px-4">Metode</th>
+                    <th class="py-3.5 px-4">Status</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="9" class="py-12 text-center text-slate-400">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        Tidak ada transaksi yang cocok dengan pencarian / filter.
+                      </td>
+                    </tr>
+                  ` : filtered.map(tx => `
+                    <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openTxDetail('${tx.invoice || tx.id}')">
+                      <td class="py-3.5 px-4 font-mono font-bold text-emerald-700">${tx.invoice || tx.id}</td>
+                      <td class="py-3.5 px-4 text-slate-500">${formatDate(tx.date || tx.created_at)}</td>
+                      <td class="py-3.5 px-4 font-semibold text-slate-800">${tx.customer || 'Pelanggan Umum'}</td>
+                      <td class="py-3.5 px-4 text-slate-600">${tx.product || tx.items || 'Layanan Cetak'}</td>
+                      <td class="py-3.5 px-4 text-slate-600 font-mono">${tx.qty || 1}</td>
+                      <td class="py-3.5 px-4 font-extrabold text-slate-900 font-mono">${formatIDR(tx.total || tx.amount || 0)}</td>
+                      <td class="py-3.5 px-4 text-slate-600">${tx.payment_method || 'QRIS'}</td>
+                      <td class="py-3.5 px-4">${renderStatusBadge(tx.status)}</td>
+                      <td class="py-3.5 px-4 text-center" onclick="event.stopPropagation()">
+                        <button 
+                          onclick="openDeleteConfirm('${tx.invoice || tx.id}')" 
+                          title="Hapus Transaksi"
+                          class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        >
+                          <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActivityTab() {
+      const logs = AuthService.getActivityLogs();
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Log Aktivitas Sistem</h3>
+              <p class="text-xs text-slate-500">Catatan riwayat tindakan pengguna dan aktivitas di dashboard</p>
+            </div>
+            <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-lg font-mono font-bold">${logs.length} catatan</span>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Waktu</th>
+                    <th class="py-3.5 px-4">Pengguna</th>
+                    <th class="py-3.5 px-4">Aktivitas</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${logs.length === 0 ? `
+                    <tr>
+                      <td colspan="3" class="py-12 text-center text-slate-400">
+                        Belum ada catatan aktivitas.
+                      </td>
+                    </tr>
+                  ` : logs.map(l => `
+                    <tr class="hover:bg-slate-50 transition">
+                      <td class="py-3.5 px-4 text-slate-500 font-mono">${formatDate(l.timestamp)}</td>
+                      <td class="py-3.5 px-4 font-bold text-slate-900">${l.username}</td>
+                      <td class="py-3.5 px-4 text-slate-700 font-medium">${l.action}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettingsTab() {
+      const currentUrl = ApiService.getApiUrl();
+
+      return `
+        <div class="max-w-xl space-y-6 animate-fade-in">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Pengaturan Connection Endpoint API</h3>
+              <p class="text-xs text-slate-500 mt-1">Konfigurasikan alamat URL backend REST API server untuk sinkronisasi otomatis transaksi.</p>
+            </div>
+
+            <form onsubmit="handleSaveApiSettings(event)" class="space-y-4 text-xs">
+              <div class="space-y-1.5">
+                <label class="font-semibold text-slate-700">Base URL API Server</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <i data-lucide="link" class="w-4 h-4"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    id="input-api-url" 
+                    value="${currentUrl}" 
+                    required 
+                    placeholder="https://api.coratcoretlayar.id/api/v1/sales" 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl font-mono focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                <button 
+                  type="button" 
+                  onclick="ApiService.setApiUrl('${DEFAULT_API_URL}'); AppState.showToast('URL API telah direset ke default'); AppState.render();" 
+                  class="px-3 py-2 text-slate-500 hover:text-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-100 transition"
+                >
+                  Reset Default
+                </button>
+                <button 
+                  type="submit" 
+                  class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition"
+                >
+                  Simpan & Hubungkan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleSaveApiSettings(e) {
+      e.preventDefault();
+      const newUrl = document.getElementById('input-api-url').value.trim();
+      if (newUrl) {
+        ApiService.setApiUrl(newUrl);
+        AppState.showToast('Alamat API Server berhasil diperbarui!');
+        AppState.loadData();
+      }
+    }
+
+    function openAddTxModal() {
+      AppState.txModalOpen = true;
+      AppState.render();
+    }
+
+    function closeAddTxModal() {
+      AppState.txModalOpen = false;
+      AppState.render();
+    }
+
+    function renderAddTxModal() {
+      const autoInv = 'CCL-' + Date.now().toString().slice(-6);
+
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-200 text-slate-800">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <h3 class="font-bold text-slate-900 text-sm">Input Transaksi Penjualan Baru</h3>
+              <button onclick="closeAddTxModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <form onsubmit="handleAddTxSubmit(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nomor Invoice</label>
+                <input 
+                  type="text" 
+                  id="tx-invoice" 
+                  value="${autoInv}" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Pelanggan</label>
+                <input 
+                  type="text" 
+                  id="tx-customer" 
+                  placeholder="Contoh: Budi Santoso" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Produk / Layanan</label>
+                <input 
+                  type="text" 
+                  id="tx-product" 
+                  placeholder="Contoh: Banner Flexi 2x1m" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Qty (Jumlah)</label>
+                  <input 
+                    type="number" 
+                    id="tx-qty" 
+                    value="1" 
+                    min="1" 
+                    required 
+                    class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                  />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Total (Rp)</label>
+                  <input 
+                    type="number" 
+                    id="tx-total" 
+                    placeholder="75000" 
+                    required 
+                    class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Metode Pembayaran</label>
+                  <select id="tx-payment" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="QRIS">QRIS</option>
+                    <option value="Tunai">Tunai / Cash</option>
+                    <option value="Transfer BCA">Transfer BCA</option>
+                    <option value="Transfer Mandiri">Transfer Mandiri</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Status Pembayaran</label>
+                  <select id="tx-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="Completed">Selesai / Lunas</option>
+                    <option value="Pending">Pending / DP</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+                <button type="button" onclick="closeAddTxModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">Simpan Transaksi</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleAddTxSubmit(e) {
+      e.preventDefault();
+      const invoice = document.getElementById('tx-invoice').value.trim();
+      const customer = document.getElementById('tx-customer').value.trim();
+      const product = document.getElementById('tx-product').value.trim();
+      const qty = parseInt(document.getElementById('tx-qty').value) || 1;
+      const total = parseFloat(document.getElementById('tx-total').value) || 0;
+      const payment_method = document.getElementById('tx-payment').value;
+      const status = document.getElementById('tx-status').value;
+
+      const newTx = {
+        id: invoice,
+        invoice,
+        customer,
+        product,
+        items: product,
+        qty,
+        total,
+        amount: total,
+        payment_method,
+        status,
+        date: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Simpan langsung di memory state aplikasi
+      AppState.salesRaw = [newTx, ...AppState.salesRaw.filter(x => (x.invoice || x.id) !== invoice)];
+      
+      // 2. Simpan secara permanen di LocalStorage agar tidak terhapus
+      ApiService.saveLocalSales(AppState.salesRaw);
+
+      // 3. Coba kirimkan ke REST API jika API server aktif
+      ApiService.sendTransactionToApi(newTx);
+
+      // 4. Catat aktivitas
+      const session = AuthService.getSession();
+      if (session) {
+        AuthService.logActivity(session.username, `Menambahkan transaksi baru ${invoice} (${formatIDR(total)})`);
+      }
+
+      closeAddTxModal();
+      AppState.showToast(`Transaksi ${invoice} berhasil disimpan!`);
+    }
+
+    function renderUserManagementTab(session) {
+      if (session.role !== 'Owner') {
+        return `
+          <div class="p-8 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs text-center space-y-2">
+            <i data-lucide="shield-alert" class="w-8 h-8 mx-auto text-rose-600"></i>
+            <p class="font-bold text-sm">Akses Dibatasi</p>
+            <p>Hanya Owner yang berhak mengelola dan membuatkan akun admin baru.</p>
+          </div>
+        `;
+      }
+
+      const users = AuthService.getUsers();
+
+      return `
+        <div class="space-y-6 animate-fade-in">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm">Manajemen Akun Admin & Kasir</h3>
+              <p class="text-xs text-slate-500">Buatkan akun baru untuk staf/admin agar bisa login ke dashboard</p>
+            </div>
+
+            <button 
+              onclick="AppState.addUserModalOpen = true; AppState.render();" 
+              class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm"
+            >
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>Tambah Akun Baru</span>
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Username</th>
+                    <th class="py-3.5 px-4">Nama Lengkap</th>
+                    <th class="py-3.5 px-4">Peran / Hak Akses</th>
+                    <th class="py-3.5 px-4">Tanggal Dibuat</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${users.map(u => `
+                    <tr class="hover:bg-slate-50 transition">
+                      <td class="py-3.5 px-4 font-bold text-slate-900 font-mono">${u.username}</td>
+                      <td class="py-3.5 px-4 font-semibold text-slate-700">${u.name}</td>
+                      <td class="py-3.5 px-4">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'Owner' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
+                          ${u.role}
+                        </span>
+                      </td>
+                      <td class="py-3.5 px-4 text-slate-500">${formatDate(u.createdAt)}</td>
+                      <td class="py-3.5 px-4 text-center">
+                        ${u.role !== 'Owner' ? `
+                          <button 
+                            onclick="handleDeleteUser('${u.username}')" 
+                            title="Hapus Akun"
+                            class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          >
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          </button>
+                        ` : `<span class="text-[10px] text-slate-400 italic">Utama</span>`}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAddUserModal() {
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-200 text-slate-800">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <h3 class="font-bold text-slate-900 text-sm">Buat Akun Admin Baru</h3>
+              <button onclick="AppState.addUserModalOpen = false; AppState.render();" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <form onsubmit="handleCreateUserSubmit(event)" class="space-y-3 text-xs">
+              <div id="user-create-error" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs"></div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Username Login</label>
+                <input 
+                  type="text" 
+                  id="new-username" 
+                  placeholder="Contoh: kasir1 / admin_sales" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap Admin</label>
+                <input 
+                  type="text" 
+                  id="new-fullname" 
+                  placeholder="Contoh: Siska Rahmawati" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Password</label>
+                <input 
+                  type="password" 
+                  id="new-password" 
+                  placeholder="Buat password login admin" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Peran Akses</label>
+                <select id="new-role" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="Admin">Admin Kasir</option>
+                  <option value="Staff">Staff Operational</option>
+                </select>
+              </div>
+
+              <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+                <button type="button" onclick="AppState.addUserModalOpen = false; AppState.render();" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">Simpan Akun</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleCreateUserSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('new-username').value;
+      const name = document.getElementById('new-fullname').value;
+      const password = document.getElementById('new-password').value;
+      const role = document.getElementById('new-role').value;
+
+      const res = await AuthService.createUser({ username, name, password, role });
+      if (res.success) {
+        AppState.addUserModalOpen = false;
+        AppState.showToast(`Akun admin ${username} berhasil dibuat!`);
+        AppState.render();
+      } else {
+        const errBox = document.getElementById('user-create-error');
+        if (errBox) {
+          errBox.textContent = res.message;
+          errBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function handleDeleteUser(username) {
+      const res = AuthService.deleteUser(username);
+      if (res.success) {
+        AppState.showToast(`Akun ${username} telah dihapus.`);
+        AppState.render();
+      } else {
+        AppState.showToast(res.message);
+      }
+    }
+
+    function renderTxDetailModal() {
+      const tx = AppState.selectedTx;
+      if (!tx) return '';
+
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-200 text-slate-800">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900 font-mono text-sm">${tx.invoice || tx.id}</h3>
+                <p class="text-[11px] text-slate-500">${formatDate(tx.date || tx.created_at)}</p>
+              </div>
+              <button onclick="closeTxDetail()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1">
+                <p class="text-slate-500 font-medium">Pelanggan</p>
+                <p class="font-bold text-slate-900">${tx.customer || 'Pelanggan Umum'}</p>
+              </div>
+
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1">
+                <p class="text-slate-500 font-medium">Produk / Layanan</p>
+                <p class="font-bold text-slate-900">${tx.product || tx.items || 'Layanan Cetak'}</p>
+                <p class="text-slate-500">Jumlah Qty: ${tx.qty || 1}</p>
+              </div>
+
+              <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                <div>
+                  <p class="text-slate-500 font-medium">Total Pembayaran</p>
+                  <p class="font-extrabold text-slate-900 font-mono text-base">${formatIDR(tx.total || tx.amount || 0)}</p>
+                </div>
+                <div>
+                  ${renderStatusBadge(tx.status)}
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1">
+                <p class="text-slate-500 font-medium">Metode Pembayaran</p>
+                <p class="font-bold text-slate-900">${tx.payment_method || 'QRIS'}</p>
+              </div>
+            </div>
+
+            <div class="pt-2 flex justify-between items-center border-t border-slate-100">
+              <button 
+                onclick="closeTxDetail(); openDeleteConfirm('${tx.invoice || tx.id}');" 
+                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition"
+              >
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Transaksi</span>
+              </button>
+              <button onclick="closeTxDetail()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Tutup</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDeleteConfirmModal() {
+      const tx = AppState.deleteConfirmTx;
+      if (!tx) return '';
+
+      const invNum = tx.invoice || tx.id;
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-rose-100 text-slate-800">
+            <div class="flex items-center space-x-3 text-rose-600">
+              <div class="p-3 bg-rose-50 rounded-2xl border border-rose-100 shrink-0">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Hapus Transaksi?</h3>
+                <p class="text-xs text-rose-600 font-mono">${invNum}</p>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Apakah Anda yakin ingin menghapus transaksi <strong class="text-slate-900">${tx.customer || 'Pelanggan'}</strong> senilai <strong class="text-slate-900">${formatIDR(tx.total || tx.amount || 0)}</strong>? Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+              <button 
+                onclick="closeDeleteConfirm()" 
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+              >
+                Batal
+              </button>
+              <button 
+                onclick="handleExecuteDelete()" 
+                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5"
+              >
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Ya, Hapus</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openDeleteConfirm(invOrId) {
+      const found = AppState.salesRaw.find(x => (x.invoice || x.id) === invOrId);
+      if (found) {
+        AppState.deleteConfirmTx = found;
+        AppState.render();
+      }
+    }
+
+    function closeDeleteConfirm() {
+      AppState.deleteConfirmTx = null;
+      AppState.render();
+    }
+
+    async function handleExecuteDelete() {
+      const tx = AppState.deleteConfirmTx;
+      if (!tx) return;
+
+      const invNum = tx.invoice || tx.id;
+
+      // Update state & simpan pembaruan ke local storage
+      AppState.salesRaw = AppState.salesRaw.filter(x => (x.invoice || x.id) !== invNum && x.id !== tx.id);
+      ApiService.saveLocalSales(AppState.salesRaw);
+
+      // Kirim DELETE ke API
+      await ApiService.deleteSalesData(tx.id || invNum);
+
+      // Catat log aktivitas
+      const session = AuthService.getSession();
+      if (session) {
+        AuthService.logActivity(session.username, `Menghapus transaksi ${invNum} (${formatIDR(tx.total || tx.amount || 0)})`);
+      }
+
+      AppState.deleteConfirmTx = null;
+      AppState.selectedTx = null;
+      AppState.showToast(`Transaksi ${invNum} berhasil dihapus.`);
+      AppState.render();
+    }
+
+    function openTxDetail(invOrId) {
+      const found = AppState.salesRaw.find(x => (x.invoice || x.id) === invOrId);
+      if (found) {
+        AppState.selectedTx = found;
+        AppState.render();
+      }
+    }
+
+    function closeTxDetail() {
+      AppState.selectedTx = null;
+      AppState.render();
+    }
+
+    function exportToCSV(data, fileNamePrefix = 'Rekap_Penjualan') {
+      if (!data || data.length === 0) {
+        AppState.showToast('Tidak ada data transaksi untuk diexport.');
+        return;
+      }
+
+      const headers = ['Invoice', 'Tanggal', 'Pelanggan', 'Produk', 'Qty', 'Total', 'Metode', 'Status'];
+      const rows = data.map(tx => [
+        `"${tx.invoice || tx.id || ''}"`,
+        `"${formatDate(tx.date || tx.created_at)}"`,
+        `"${tx.customer || 'Pelanggan Umum'}"`,
+        `"${tx.product || tx.items || 'Layanan'}"`,
+        tx.qty || 1,
+        tx.total || tx.amount || 0,
+        `"${tx.payment_method || 'QRIS'}"`,
+        `"${tx.status || 'Completed'}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `${fileNamePrefix}_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportFilteredTransactions() {
+      const data = AppState.getFilteredTransactions();
+      exportToCSV(data, 'Data_Transaksi');
+    }
+
+    function exportPeriodSales() {
+      const data = AppState.getPeriodSales();
+      const periodLabel = AppState.rekapMode === 'date' 
+        ? `Tanggal_${AppState.selectedDate}` 
+        : `${MONTH_NAMES[AppState.selectedMonth]}_${AppState.selectedYear}`;
+      exportToCSV(data, `Rekap_Penjualan_${periodLabel}`);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      AppState.loadData();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        AppState.loadData();
+      }
+    });
