@@ -17,7 +17,7 @@ const MAX_STORED = 500; // batasi jumlah record yang disimpan agar file tidak me
 function setCors(res) {
   // Ganti '*' dengan domain website kedua kamu jika ingin membatasi akses.
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   // Pastikan browser/CDN/proxy TIDAK pernah cache respons endpoint ini,
   // supaya data penjualan selalu real-time dan tidak ketinggalan (mencegah 304 palsu).
@@ -122,9 +122,80 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ---------- DELETE: kosongkan semua data (opsional, untuk reset dashboard) ----------
+  // ---------- PUT: perbarui transaksi yang sudah ada (edit nominal, status, dst) ----------
+  if (req.method === 'PUT') {
+    try {
+      const body = req.body;
+
+      if (!body || typeof body !== 'object') {
+        return res.status(400).json({ success: false, error: 'Data update tidak valid' });
+      }
+
+      const targetKey = (body.id || body.invoice || '').toString();
+      if (!targetKey) {
+        return res.status(400).json({ success: false, error: 'id atau invoice wajib diisi untuk update' });
+      }
+
+      const sales = await readSales();
+      const idx = sales.findIndex((s) => (s.id || '').toString() === targetKey || (s.invoice || '').toString() === targetKey);
+
+      // Field yang boleh diubah lewat edit di dashboard
+      const allowedFields = ['total', 'amount', 'payment_method', 'status', 'customer', 'product', 'qty'];
+
+      if (idx === -1) {
+        // Belum ada di server (misalnya transaksi lama yang cuma tersimpan lokal) -> buat baru
+        const record = {
+          id: body.id || targetKey,
+          invoice: body.invoice || targetKey,
+          customer: body.customer || 'Pelanggan WhatsApp',
+          product: body.product || '',
+          qty: Number(body.qty) || 0,
+          total: Number(body.total) || 0,
+          payment_method: body.payment_method || 'QRIS',
+          status: body.status || 'Pending',
+          date: body.date || new Date().toISOString(),
+        };
+        sales.unshift(record);
+        await writeSales(sales.slice(0, MAX_STORED));
+        return res.status(201).json({ success: true, order: record });
+      }
+
+      const updated = { ...sales[idx] };
+      allowedFields.forEach((field) => {
+        if (typeof body[field] !== 'undefined') {
+          updated[field] = (field === 'total' || field === 'amount' || field === 'qty') ? Number(body[field]) : body[field];
+        }
+      });
+      updated.updated_at = new Date().toISOString();
+      sales[idx] = updated;
+
+      await writeSales(sales);
+
+      return res.status(200).json({ success: true, order: updated });
+    } catch (err) {
+      console.error('PUT /api/v1/sales error:', err);
+      return res.status(500).json({ success: false, error: 'Gagal memperbarui data penjualan' });
+    }
+  }
+
+  // ---------- DELETE: hapus 1 transaksi (pakai ?id=...), atau kosongkan semua kalau tanpa id ----------
   if (req.method === 'DELETE') {
     try {
+      const targetKey = (req.query.id || '').toString();
+
+      if (targetKey) {
+        const sales = await readSales();
+        const filtered = sales.filter((s) => (s.id || '').toString() !== targetKey && (s.invoice || '').toString() !== targetKey);
+
+        if (filtered.length === sales.length) {
+          return res.status(404).json({ success: false, error: 'Transaksi tidak ditemukan' });
+        }
+
+        await writeSales(filtered);
+        return res.status(200).json({ success: true, message: `Transaksi ${targetKey} dihapus` });
+      }
+
+      // Tanpa id -> reset seluruh data (dipakai tombol reset dashboard)
       const existing = await findExistingBlob();
       if (existing) {
         await del(existing.url);
@@ -136,6 +207,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  res.setHeader('Allow', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE, OPTIONS');
   return res.status(405).json({ success: false, error: 'Method tidak diizinkan' });
 };

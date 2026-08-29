@@ -124,8 +124,7 @@
           <div class="product-content">
             <h3 class="product-title">${p.name}</h3>
             <p class="product-desc">${p.subDesc || p.desc}</p>
-            ${Number(p.price) > 0 ? `<p class="product-price" style="font-weight:700; color:var(--primary); margin: 4px 0 8px;">Rp ${Number(p.price).toLocaleString("id-ID")}</p>` : ""}
-            <button class="product-btn" onclick="addToCart('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.img.replace(/'/g, "\\'")}', ${Number(p.price) || 0}, this)">
+            <button class="product-btn" onclick="addToCart('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.img.replace(/'/g, "\\'")}', 0, this)">
               <i class="fa-solid fa-plus"></i> Tambah ke Keranjang
             </button>
           </div>
@@ -243,7 +242,6 @@
         const name = document.getElementById("pName").value.trim();
         const desc = document.getElementById("pDesc").value.trim();
         const subDesc = document.getElementById("pSubDesc").value.trim();
-        const price = Number(document.getElementById("pPrice").value) || 0;
         let img = document.getElementById("pImgUrl").value.trim();
 
         if (!name || !desc) {
@@ -261,14 +259,14 @@
           // Update Existing Product
           products = products.map((p) => {
             if (p.id === editId) {
-              return { ...p, name, desc, subDesc, img, price };
+              return { ...p, name, desc, subDesc, img };
             }
             return p;
           });
         } else {
           // Add New Product
           const newId = "p_" + Date.now();
-          products.push({ id: newId, name, desc, subDesc, img, price });
+          products.push({ id: newId, name, desc, subDesc, img });
         }
 
         saveStoredProducts(products);
@@ -285,7 +283,6 @@
         document.getElementById("pName").value = target.name;
         document.getElementById("pDesc").value = target.desc;
         document.getElementById("pSubDesc").value = target.subDesc || "";
-        document.getElementById("pPrice").value = target.price || 0;
         document.getElementById("pImgUrl").value = target.img;
         document.getElementById("pImgPreview").src = target.img;
         document.getElementById("pImgPreviewContainer").style.display = "block";
@@ -305,7 +302,6 @@
         document.getElementById("pName").value = "";
         document.getElementById("pDesc").value = "";
         document.getElementById("pSubDesc").value = "";
-        document.getElementById("pPrice").value = "";
         document.getElementById("pImgUrl").value = "";
         document.getElementById("pImgFile").value = "";
         document.getElementById("pImgPreviewContainer").style.display = "none";
@@ -323,7 +319,6 @@
           <td><img src="${p.img}" class="admin-p-img" onerror="this.src='https://placehold.co/100x100/181528/fff?text=IMG'" /></td>
           <td style="font-weight:600;">${p.name}</td>
           <td style="color:var(--text-muted);">${p.desc}</td>
-          <td style="white-space:nowrap; color:var(--text-muted);">Rp ${Number(p.price || 0).toLocaleString("id-ID")}</td>
           <td style="white-space:nowrap;">
             <button class="btn btn-ghost" style="padding:5px 10px; font-size:11px; margin-right:4px;" onclick="editProduct('${p.id}')">
               <i class="fa-solid fa-pen"></i> Edit
@@ -560,22 +555,16 @@
 
       function renderCart() {
         const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        const totalPrice = cart.reduce((sum, item) => sum + item.qty * (Number(item.price) || 0), 0);
-        const cartTotalRow = document.getElementById("cartTotalRow");
-        const cartTotalValue = document.getElementById("cartTotalValue");
 
         if (totalItems > 0) {
           cartBadgeCount.style.display = "flex";
           cartBadgeCount.textContent = totalItems;
           cartEmptyMsg.style.display = "none";
           checkoutWaBtn.disabled = false;
-          if (cartTotalRow) cartTotalRow.style.display = "flex";
-          if (cartTotalValue) cartTotalValue.textContent = "Rp " + totalPrice.toLocaleString("id-ID");
         } else {
           cartBadgeCount.style.display = "none";
           cartEmptyMsg.style.display = "block";
           checkoutWaBtn.disabled = true;
-          if (cartTotalRow) cartTotalRow.style.display = "none";
         }
 
         // Render cart DOM items

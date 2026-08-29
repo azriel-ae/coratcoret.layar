@@ -51,9 +51,30 @@
       }
     }
 
+    // Menghasilkan nomor invoice berurutan dengan format CCL-0001, CCL-0002, dst.
+    // Nomor urut dihitung dari angka terbesar yang sudah pernah dipakai pada
+    // invoice berformat CCL-xxxx yang tersimpan (baik dari API maupun lokal),
+    // supaya urutannya tetap konsisten walau ada transaksi yang sudah dihapus.
+    function getNextInvoiceNumber() {
+      const pattern = /^CCL-(\d+)$/i;
+      let maxNum = 0;
+
+      (AppState.salesRaw || []).forEach(tx => {
+        const inv = (tx.invoice || tx.id || '').toString().trim();
+        const match = inv.match(pattern);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        }
+      });
+
+      const nextNum = maxNum + 1;
+      return 'CCL-' + String(nextNum).padStart(4, '0');
+    }
+
     function renderStatusBadge(status) {
       const s = (status || 'Completed').toString().toLowerCase();
-      if (s.includes('completed') || s.includes('lunas') || s.includes('sukses')) {
+      if (s.includes('completed') || s.includes('lunas') || s.includes('sukses') || s.includes('success')) {
         return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Selesai
                 </span>`;
@@ -241,13 +262,14 @@
           if (key) map.set(key, item);
         });
 
-        // Masukkan / perbarui dengan data dari API
+        // Masukkan / perbarui dengan data dari API — data lokal (misalnya hasil
+        // edit manual di dashboard) tetap diprioritaskan dibanding data server
+        // supaya perubahan yang belum sempat tersinkron tidak tertimpa balik.
         (apiSales || []).forEach(item => {
           const key = (item.invoice || item.id || '').toString();
           if (key) {
-            // Gabungkan properti jika sudah ada, atau tambahkan jika baru
-            const existing = map.get(key) || {};
-            map.set(key, { ...existing, ...item });
+            const existing = map.get(key);
+            map.set(key, existing ? { ...item, ...existing } : item);
           }
         });
 
@@ -321,6 +343,25 @@
         }
       },
 
+      async updateTransactionApi(id, updates) {
+        try {
+          const baseUrl = this.getApiUrl();
+          const endpoint = baseUrl.endsWith('/v1/sales') || baseUrl.includes('/v1/sales')
+            ? baseUrl
+            : `${baseUrl.replace(/\/$/, '')}/v1/sales`;
+
+          const res = await fetch(endpoint, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...updates })
+          });
+          return res.ok;
+        } catch (e) {
+          console.warn('API PUT warn (tersimpan di lokal):', e);
+          return false;
+        }
+      },
+
       async deleteSalesData(id) {
         try {
           const baseUrl = this.getApiUrl();
@@ -363,6 +404,7 @@
       txStatus: 'ALL',
       selectedTx: null,
       deleteConfirmTx: null,
+      editTx: null,
 
       txModalOpen: false,
 
@@ -378,7 +420,7 @@
 
           const s = (tx.status || 'Completed').toLowerCase();
           let matchesStatus = true;
-          if (statusFilter === 'COMPLETED') matchesStatus = s.includes('completed') || s.includes('lunas') || s.includes('sukses');
+          if (statusFilter === 'COMPLETED') matchesStatus = s.includes('completed') || s.includes('lunas') || s.includes('sukses') || s.includes('success');
           else if (statusFilter === 'PENDING') matchesStatus = s.includes('pending') || s.includes('proses');
           else if (statusFilter === 'CANCELLED') matchesStatus = s.includes('cancel') || s.includes('batal');
 
@@ -475,7 +517,7 @@
         const status = (tx.status || 'Completed').toLowerCase();
         const dateStr = (tx.date || tx.created_at || '').slice(0, 10);
 
-        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses')) {
+        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses') || status.includes('success')) {
           totalOmzet += amount;
           completedCount++;
           if (dateStr === nowStr) {
@@ -779,6 +821,7 @@
 
         ${AppState.txModalOpen ? renderAddTxModal() : ''}
         ${AppState.selectedTx ? renderTxDetailModal() : ''}
+        ${AppState.editTx ? renderEditTxModal() : ''}
         ${AppState.deleteConfirmTx ? renderDeleteConfirmModal() : ''}
         ${AppState.addUserModalOpen ? renderAddUserModal() : ''}
         ${AppState.exitConfirmOpen ? renderExitConfirmModal() : ''}
@@ -954,7 +997,7 @@
         const prodName = tx.product || tx.items || 'Layanan Cetak';
         const payMethod = tx.payment_method || 'QRIS';
 
-        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses')) {
+        if (status.includes('completed') || status.includes('lunas') || status.includes('sukses') || status.includes('success')) {
           totalOmzetBulan += amount;
           completedCountBulan++;
           totalQtyBulan += qty;
@@ -1408,7 +1451,7 @@
     }
 
     function renderAddTxModal() {
-      const autoInv = 'CCL-' + Date.now().toString().slice(-6);
+      const autoInv = getNextInvoiceNumber();
 
       return `
         <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -1491,7 +1534,7 @@
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1">Status Pembayaran</label>
                   <select id="tx-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <option value="Completed">Selesai / Lunas</option>
+                    <option value="Success">Success / Selesai</option>
                     <option value="Pending">Pending / DP</option>
                   </select>
                 </div>
@@ -1774,7 +1817,16 @@
                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 <span>Hapus Transaksi</span>
               </button>
-              <button onclick="closeTxDetail()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Tutup</button>
+              <div class="flex items-center space-x-2">
+                <button 
+                  onclick="openEditTxModal('${tx.invoice || tx.id}')" 
+                  class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition"
+                >
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                  <span>Edit</span>
+                </button>
+                <button onclick="closeTxDetail()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Tutup</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1833,6 +1885,136 @@
 
     function closeDeleteConfirm() {
       AppState.deleteConfirmTx = null;
+      AppState.render();
+    }
+
+    // Daftar metode pembayaran yang bisa dipilih saat menambah/mengedit
+    // transaksi. Kalau metode pembayaran transaksi yang sedang diedit tidak
+    // ada di daftar ini (misalnya diinput manual sebelumnya), otomatis
+    // ditambahkan sebagai opsi supaya nilainya tidak hilang.
+    const PAYMENT_METHODS = ['QRIS', 'Tunai', 'Transfer BCA', 'Transfer Mandiri', 'WhatsApp Order'];
+
+    function renderEditTxModal() {
+      const tx = AppState.editTx;
+      if (!tx) return '';
+
+      const invNum = tx.invoice || tx.id || '';
+      const currentTotal = Number(tx.total || tx.amount || 0);
+      const currentPayment = tx.payment_method || 'QRIS';
+      const currentStatusRaw = (tx.status || 'Pending').toString().toLowerCase();
+      const isSuccess = currentStatusRaw.includes('completed') || currentStatusRaw.includes('lunas') || currentStatusRaw.includes('sukses') || currentStatusRaw.includes('success');
+
+      const paymentOptions = PAYMENT_METHODS.includes(currentPayment)
+        ? PAYMENT_METHODS
+        : [...PAYMENT_METHODS, currentPayment];
+
+      return `
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-200 text-slate-800">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm">Edit Transaksi</h3>
+                <p class="text-[11px] text-slate-500 font-mono">${invNum}</p>
+              </div>
+              <button onclick="closeEditTxModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <form onsubmit="handleEditTxSubmit(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Total / Nominal Harga (Rp)</label>
+                <input 
+                  type="number" 
+                  id="edit-tx-total" 
+                  value="${currentTotal}" 
+                  min="0" 
+                  required 
+                  class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                />
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Metode Pembayaran</label>
+                <select id="edit-tx-payment" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  ${paymentOptions.map(m => `<option value="${m}" ${m === currentPayment ? 'selected' : ''}>${m}</option>`).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Status Pembayaran</label>
+                <select id="edit-tx-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="Pending" ${!isSuccess ? 'selected' : ''}>Pending</option>
+                  <option value="Success" ${isSuccess ? 'selected' : ''}>Success</option>
+                </select>
+              </div>
+
+              <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+                <button type="button" onclick="closeEditTxModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">Simpan Perubahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function openEditTxModal(invOrId) {
+      const found = AppState.salesRaw.find(x => (x.invoice || x.id) === invOrId);
+      if (found) {
+        AppState.editTx = found;
+        AppState.render();
+      }
+    }
+
+    function closeEditTxModal() {
+      AppState.editTx = null;
+      AppState.render();
+    }
+
+    async function handleEditTxSubmit(e) {
+      e.preventDefault();
+      const tx = AppState.editTx;
+      if (!tx) return;
+
+      const invNum = tx.invoice || tx.id;
+      const newTotal = Number(document.getElementById('edit-tx-total').value) || 0;
+      const newPayment = document.getElementById('edit-tx-payment').value;
+      const newStatus = document.getElementById('edit-tx-status').value;
+
+      AppState.salesRaw = AppState.salesRaw.map(x => {
+        if ((x.invoice || x.id) === invNum) {
+          return {
+            ...x,
+            total: newTotal,
+            amount: newTotal,
+            payment_method: newPayment,
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          };
+        }
+        return x;
+      });
+
+      // 1. Simpan permanen ke LocalStorage
+      ApiService.saveLocalSales(AppState.salesRaw);
+
+      // 2. Coba sinkronkan perubahan ke REST API jika server aktif
+      await ApiService.updateTransactionApi(tx.id || invNum, {
+        invoice: invNum,
+        total: newTotal,
+        payment_method: newPayment,
+        status: newStatus
+      });
+
+      // 3. Catat aktivitas
+      const session = AuthService.getSession();
+      if (session) {
+        AuthService.logActivity(session.username, `Mengedit transaksi ${invNum} (${formatIDR(newTotal)}, ${newStatus})`);
+      }
+
+      AppState.editTx = null;
+      AppState.showToast(`Transaksi ${invNum} berhasil diperbarui!`);
       AppState.render();
     }
 
